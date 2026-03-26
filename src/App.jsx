@@ -15,8 +15,9 @@ function App() {
     <BrowserRouter>
       <AuthProvider>
         <Routes>
-          {/* Public route */}
+          {/* Public routes */}
           <Route path="/" element={<Login />} />
+          <Route path="/login" element={<Login />} />
 
           {/* Protected routes */}
           <Route path="/welcome" element={<ProtectedRoute><OnboardingSuccess /></ProtectedRoute>} />

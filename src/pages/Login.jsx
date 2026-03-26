@@ -7,6 +7,7 @@ import { useAuth } from '../contexts/AuthContext';
 export default function Login() {
   const navigate = useNavigate();
   const { session, loading: authLoading } = useAuth();
+  const [isLogin, setIsLogin] = useState(false);
   const [role, setRole] = useState('passenger');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -136,10 +137,12 @@ export default function Login() {
         {/* Welcome Hero Section */}
         <section className="mb-12">
           <h1 className="text-4xl font-extrabold font-headline tracking-tight text-on-surface mb-3 hanging-title">
-            Join the collective.
+            {isLogin ? 'Welcome back.' : 'Join the collective.'}
           </h1>
           <p className="text-on-surface-variant font-body text-lg max-w-md">
-            The most premium way to share your journey and reduce your carbon footprint.
+            {isLogin
+              ? 'Log in to continue your journey with the collective.'
+              : 'The most premium way to share your journey and reduce your carbon footprint.'}
           </p>
         </section>
 
@@ -177,7 +180,7 @@ export default function Login() {
         </div>
 
         {/* Main Form Stack */}
-        <form className="space-y-8" onSubmit={handleSignUp}>
+        <form className="space-y-8" onSubmit={isLogin ? (e) => { e.preventDefault(); handleSignIn(); } : handleSignUp}>
           {/* Account Credentials */}
           <div className="space-y-4">
             <div className="relative">
@@ -205,98 +208,102 @@ export default function Login() {
                 {showPassword ? 'visibility_off' : 'visibility'}
               </button>
             </div>
-            <div className="relative">
-              <div className="absolute left-5 top-1/2 -translate-y-1/2 flex items-center gap-2 pointer-events-none">
-                <img
-                  alt="WhatsApp"
-                  className="w-5 h-5 opacity-80"
-                  src="https://lh3.googleusercontent.com/aida-public/AB6AXuDjh09jLQWafrRhw4hHvqY5VEz5-XW1eaDtjJre2hbs2FyMhg53cwvDfMjzjbC4EXfwwmXVZIbWEUyHY5vh7rZ2FgRhJ0ukj4TP25jYL2NdCZXh1DXA5rsvIN9uIOF6hXfXSreuLGDLiLa6CMAIqCFHVnC_0xEHj8T7T_FXgMsdmnvmj3fAoXQfp1Ip0uMzgSucL6FPcy66Lva0Xy9UkL630T5A95pfViRmu1lgv-5rnGR9BdsytI0PscKGoo4IgzYvYZoQCo9ldOs"
-                />
-                <span className="text-xs font-bold text-on-surface-variant/40">WA</span>
-              </div>
-              <input
-                className="w-full bg-surface-container-lowest p-5 pl-20 rounded-xl border border-outline-variant/20 text-on-surface placeholder:text-on-surface-variant/40"
-                placeholder="WhatsApp Number"
-                type="tel"
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-              />
-            </div>
-          </div>
-
-          {/* Role Selection Card */}
-          <div className="bg-surface-container-low p-8 rounded-[2rem] space-y-6 shadow-[0_12px_32px_rgba(37,99,235,0.03)] border border-outline-variant/10">
-            <div className="space-y-1">
-              <h3 className="font-headline font-bold text-xl text-on-surface">
-                How will you use dropme?
-              </h3>
-              <p className="text-sm text-on-surface-variant">Switch roles anytime after joining.</p>
-            </div>
-            <div className="flex p-1.5 bg-surface-container-highest/60 rounded-full">
-              <button
-                className={`flex-1 py-3 px-6 rounded-full font-bold text-sm transition-all duration-300 ${
-                  role === 'passenger'
-                    ? 'role-toggle-active'
-                    : 'text-on-surface-variant hover:text-on-surface'
-                }`}
-                type="button"
-                onClick={() => setRole('passenger')}
-              >
-                Passenger
-              </button>
-              <button
-                className={`flex-1 py-3 px-6 rounded-full font-bold text-sm transition-all duration-300 ${
-                  role === 'driver'
-                    ? 'role-toggle-active'
-                    : 'text-on-surface-variant hover:text-on-surface'
-                }`}
-                type="button"
-                onClick={() => setRole('driver')}
-              >
-                Driver
-              </button>
-            </div>
-
-            {/* Driver Section */}
-            {role === 'driver' && (
-              <div className="space-y-6 pt-4 border-t border-outline-variant/10">
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <label className="text-[10px] font-bold uppercase tracking-wider text-on-surface-variant/70 px-1">
-                      Vehicle Type
-                    </label>
-                    <div className="relative">
-                      <select
-                        className="w-full appearance-none bg-surface-container-lowest p-4 pr-10 rounded-xl border border-outline-variant/10 text-sm font-semibold text-on-surface"
-                        value={vehicleType}
-                        onChange={(e) => setVehicleType(e.target.value)}
-                      >
-                        <option>Car</option>
-                        <option>Three-Wheeler</option>
-                        <option>Bike</option>
-                        <option>Van</option>
-                      </select>
-                      <span className="absolute right-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-on-surface-variant pointer-events-none">
-                        expand_more
-                      </span>
-                    </div>
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-[10px] font-bold uppercase tracking-wider text-on-surface-variant/70 px-1">
-                      License Plate
-                    </label>
-                    <input
-                      className="w-full bg-surface-container-lowest p-4 rounded-xl border border-outline-variant/10 text-sm font-bold uppercase placeholder:normal-case placeholder:font-medium placeholder:text-on-surface-variant/30"
-                      placeholder="ABC-1234"
-                      type="text"
-                      value={licensePlate}
-                      onChange={(e) => setLicensePlate(e.target.value)}
-                    />
-                  </div>
+            {!isLogin && (
+              <div className="relative">
+                <div className="absolute left-5 top-1/2 -translate-y-1/2 flex items-center gap-2 pointer-events-none">
+                  <img
+                    alt="WhatsApp"
+                    className="w-5 h-5 opacity-80"
+                    src="https://lh3.googleusercontent.com/aida-public/AB6AXuDjh09jLQWafrRhw4hHvqY5VEz5-XW1eaDtjJre2hbs2FyMhg53cwvDfMjzjbC4EXfwwmXVZIbWEUyHY5vh7rZ2FgRhJ0ukj4TP25jYL2NdCZXh1DXA5rsvIN9uIOF6hXfXSreuLGDLiLa6CMAIqCFHVnC_0xEHj8T7T_FXgMsdmnvmj3fAoXQfp1Ip0uMzgSucL6FPcy66Lva0Xy9UkL630T5A95pfViRmu1lgv-5rnGR9BdsytI0PscKGoo4IgzYvYZoQCo9ldOs"
+                  />
+                  <span className="text-xs font-bold text-on-surface-variant/40">WA</span>
                 </div>
+                <input
+                  className="w-full bg-surface-container-lowest p-5 pl-20 rounded-xl border border-outline-variant/20 text-on-surface placeholder:text-on-surface-variant/40"
+                  placeholder="WhatsApp Number"
+                  type="tel"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                />
               </div>
             )}
           </div>
+
+          {/* Role Selection Card — only in signup mode */}
+          {!isLogin && (
+            <div className="bg-surface-container-low p-8 rounded-[2rem] space-y-6 shadow-[0_12px_32px_rgba(37,99,235,0.03)] border border-outline-variant/10">
+              <div className="space-y-1">
+                <h3 className="font-headline font-bold text-xl text-on-surface">
+                  How will you use dropme?
+                </h3>
+                <p className="text-sm text-on-surface-variant">Switch roles anytime after joining.</p>
+              </div>
+              <div className="flex p-1.5 bg-surface-container-highest/60 rounded-full">
+                <button
+                  className={`flex-1 py-3 px-6 rounded-full font-bold text-sm transition-all duration-300 ${
+                    role === 'passenger'
+                      ? 'role-toggle-active'
+                      : 'text-on-surface-variant hover:text-on-surface'
+                  }`}
+                  type="button"
+                  onClick={() => setRole('passenger')}
+                >
+                  Passenger
+                </button>
+                <button
+                  className={`flex-1 py-3 px-6 rounded-full font-bold text-sm transition-all duration-300 ${
+                    role === 'driver'
+                      ? 'role-toggle-active'
+                      : 'text-on-surface-variant hover:text-on-surface'
+                  }`}
+                  type="button"
+                  onClick={() => setRole('driver')}
+                >
+                  Driver
+                </button>
+              </div>
+
+              {/* Driver Section */}
+              {role === 'driver' && (
+                <div className="space-y-6 pt-4 border-t border-outline-variant/10">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-bold uppercase tracking-wider text-on-surface-variant/70 px-1">
+                        Vehicle Type
+                      </label>
+                      <div className="relative">
+                        <select
+                          className="w-full appearance-none bg-surface-container-lowest p-4 pr-10 rounded-xl border border-outline-variant/10 text-sm font-semibold text-on-surface"
+                          value={vehicleType}
+                          onChange={(e) => setVehicleType(e.target.value)}
+                        >
+                          <option>Car</option>
+                          <option>Three-Wheeler</option>
+                          <option>Bike</option>
+                          <option>Van</option>
+                        </select>
+                        <span className="absolute right-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-on-surface-variant pointer-events-none">
+                          expand_more
+                        </span>
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-bold uppercase tracking-wider text-on-surface-variant/70 px-1">
+                        License Plate
+                      </label>
+                      <input
+                        className="w-full bg-surface-container-lowest p-4 rounded-xl border border-outline-variant/10 text-sm font-bold uppercase placeholder:normal-case placeholder:font-medium placeholder:text-on-surface-variant/30"
+                        placeholder="ABC-1234"
+                        type="text"
+                        value={licensePlate}
+                        onChange={(e) => setLicensePlate(e.target.value)}
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
 
           {/* Submit Action */}
           <div className="pt-4">
@@ -308,20 +315,22 @@ export default function Login() {
               {loading ? (
                 <>
                   <span className="material-symbols-outlined animate-spin text-xl">progress_activity</span>
-                  Creating Account...
+                  {isLogin ? 'Logging in...' : 'Creating Account...'}
                 </>
               ) : (
-                'Start Journey'
+                isLogin ? 'Log In' : 'Start Journey'
               )}
             </button>
             <div className="text-center mt-8">
-              <span className="text-sm text-on-surface-variant">Already part of the collective?</span>
+              <span className="text-sm text-on-surface-variant">
+                {isLogin ? 'New to the collective?' : 'Already part of the collective?'}
+              </span>
               <button
                 type="button"
-                onClick={handleSignIn}
+                onClick={() => { setIsLogin(!isLogin); setError(''); }}
                 className="inline-block ml-1 text-primary font-bold hover:underline py-2 px-1 focus:ring-2 focus:ring-primary/20 rounded-md transition-all"
               >
-                Log in
+                {isLogin ? 'Create account' : 'Log in'}
               </button>
             </div>
           </div>
