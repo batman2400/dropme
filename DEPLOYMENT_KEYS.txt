@@ -1,0 +1,22 @@
+========================================
+  dropme. — Required Environment Variables
+========================================
+
+Copy these into Vercel Project Settings > Environment Variables BEFORE deploying.
+
+  1. VITE_SUPABASE_URL
+     → Your Supabase project URL (e.g. https://xxxxx.supabase.co)
+
+  2. VITE_SUPABASE_ANON_KEY
+     → Your Supabase public "anon" key (NOT the secret service_role key)
+
+  3. VITE_GOOGLE_MAPS_API_KEY
+     → Your Google Maps Platform API key (Places + Distance Matrix enabled)
+
+========================================
+  ⚠️  IMPORTANT
+========================================
+• NEVER use the Supabase "service_role" secret key in the frontend.
+• All three variables above are PUBLIC-facing and safe for client-side use.
+• The Google Maps key should be restricted to your domain in the Google Cloud Console.
+• Make sure to set these for BOTH "Production" and "Preview" environments in Vercel.
