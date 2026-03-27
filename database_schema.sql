@@ -29,6 +29,7 @@ CREATE TABLE IF NOT EXISTS rides (
   starting_point TEXT NOT NULL,
   end_point TEXT NOT NULL,
   departure_time TIMESTAMPTZ NOT NULL,
+  calculated_fare INTEGER,
   status TEXT NOT NULL CHECK (status IN ('active', 'completed', 'cancelled')) DEFAULT 'active',
   created_at TIMESTAMPTZ DEFAULT now()
 );

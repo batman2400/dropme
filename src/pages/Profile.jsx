@@ -13,18 +13,30 @@ export default function Profile() {
   const [showEditModal, setShowEditModal] = useState(false);
   const [editPhone, setEditPhone] = useState('');
   const [editName, setEditName] = useState('');
+  const [editUserType, setEditUserType] = useState('passenger');
+  const [editVehicleType, setEditVehicleType] = useState('Car');
+  const [editLicensePlate, setEditLicensePlate] = useState('');
   const [saving, setSaving] = useState(false);
+  const [switchingRole, setSwitchingRole] = useState(false);
 
   useEffect(() => {
     if (!profile) return;
 
     // Count rides for this user
     const countRides = async () => {
-      const { count, error } = await supabase
-        .from('rides')
-        .select('id', { count: 'exact', head: true })
-        .eq('driver_id', profile.id);
-      if (!error) setRidesCount(count || 0);
+      if (profile.user_type === 'driver') {
+        const { count, error } = await supabase
+          .from('rides')
+          .select('id', { count: 'exact', head: true })
+          .eq('driver_id', profile.id);
+        if (!error) setRidesCount(count || 0);
+      } else {
+        const { count, error } = await supabase
+          .from('requests')
+          .select('id', { count: 'exact', head: true })
+          .eq('passenger_id', profile.id);
+        if (!error) setRidesCount(count || 0);
+      }
     };
     countRides();
   }, [profile]);
@@ -32,15 +44,26 @@ export default function Profile() {
   const handleOpenEdit = () => {
     setEditPhone(profile?.phone_number || '');
     setEditName(profile?.full_name || '');
+    setEditUserType(profile?.user_type || 'passenger');
+    setEditVehicleType(profile?.vehicle_type || 'Car');
+    setEditLicensePlate(profile?.license_plate || '');
     setShowEditModal(true);
   };
 
   const handleSaveProfile = async () => {
     setSaving(true);
     try {
+      const updateData = {
+        phone_number: editPhone,
+        full_name: editName,
+        user_type: editUserType,
+        vehicle_type: editUserType === 'driver' ? editVehicleType : null,
+        license_plate: editUserType === 'driver' ? editLicensePlate : null,
+      };
+
       const { error } = await supabase
         .from('users')
-        .update({ phone_number: editPhone, full_name: editName })
+        .update(updateData)
         .eq('id', profile.id);
 
       if (error) throw error;
@@ -51,6 +74,37 @@ export default function Profile() {
       alert('Failed to update profile.');
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleQuickRoleSwitch = async () => {
+    const newRole = profile?.user_type === 'driver' ? 'passenger' : 'driver';
+
+    // If switching to driver and no vehicle info, open edit modal instead
+    if (newRole === 'driver' && !profile?.vehicle_type) {
+      setEditPhone(profile?.phone_number || '');
+      setEditName(profile?.full_name || '');
+      setEditUserType('driver');
+      setEditVehicleType('Car');
+      setEditLicensePlate('');
+      setShowEditModal(true);
+      return;
+    }
+
+    setSwitchingRole(true);
+    try {
+      const { error } = await supabase
+        .from('users')
+        .update({ user_type: newRole })
+        .eq('id', profile.id);
+
+      if (error) throw error;
+      await refreshProfile();
+    } catch (err) {
+      console.error('Role switch error:', err);
+      alert('Failed to switch role.');
+    } finally {
+      setSwitchingRole(false);
     }
   };
 
@@ -132,12 +186,12 @@ export default function Profile() {
           {/* Rides Shared */}
           <div className="bg-surface-container-lowest rounded-[2rem] p-5 flex flex-col justify-between aspect-square border border-outline-variant/10">
             <span className="font-label text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">
-              Rides Shared
+              {isDriver ? 'Rides Offered' : 'Rides Taken'}
             </span>
             <div>
               <span className="font-headline font-black text-4xl text-on-surface">{ridesCount}</span>
               <div className="flex items-center gap-1 mt-1 text-[11px] font-semibold text-primary">
-                <span>{isDriver ? 'Routes published' : 'Rides taken'}</span>
+                <span>{isDriver ? 'Routes published' : 'Rides requested'}</span>
               </div>
             </div>
           </div>
@@ -167,7 +221,10 @@ export default function Profile() {
             </span>
           </div>
           {/* Vehicle Card */}
-          <div className="bg-surface-container-low rounded-[1.5rem] p-5 flex items-center justify-between group cursor-pointer hover:bg-surface-container transition-colors">
+          <div
+            onClick={handleOpenEdit}
+            className="bg-surface-container-low rounded-[1.5rem] p-5 flex items-center justify-between group cursor-pointer hover:bg-surface-container transition-colors"
+          >
             <div className="flex items-center gap-4">
               <div className="w-12 h-12 rounded-full bg-white flex items-center justify-center text-primary shadow-sm">
                 <span className="material-symbols-outlined">directions_car</span>
@@ -182,11 +239,14 @@ export default function Profile() {
               </div>
             </div>
             <span className="material-symbols-outlined text-on-surface-variant/40 group-hover:text-primary transition-colors">
-              verified_user
+              edit_square
             </span>
           </div>
-          {/* Account Type Card */}
-          <div className="bg-surface-container-low rounded-[1.5rem] p-5 flex items-center justify-between group cursor-pointer hover:bg-surface-container transition-colors">
+          {/* Account Type Card — CLICKABLE TO SWITCH */}
+          <div
+            onClick={handleQuickRoleSwitch}
+            className="bg-surface-container-low rounded-[1.5rem] p-5 flex items-center justify-between group cursor-pointer hover:bg-surface-container transition-colors"
+          >
             <div className="flex items-center gap-4">
               <div className="w-12 h-12 rounded-full bg-white flex items-center justify-center text-primary shadow-sm">
                 <span className="material-symbols-outlined">badge</span>
@@ -198,11 +258,18 @@ export default function Profile() {
                 <p className="font-headline font-bold text-on-surface capitalize">
                   {profile?.user_type || 'Passenger'}
                 </p>
+                <p className="text-[10px] text-primary font-semibold mt-0.5">
+                  Tap to switch to {isDriver ? 'Passenger' : 'Driver'}
+                </p>
               </div>
             </div>
-            <span className="material-symbols-outlined text-on-surface-variant/40 group-hover:text-primary transition-colors">
-              chevron_right
-            </span>
+            {switchingRole ? (
+              <span className="material-symbols-outlined text-primary animate-spin">progress_activity</span>
+            ) : (
+              <span className="material-symbols-outlined text-on-surface-variant/40 group-hover:text-primary transition-colors">
+                swap_horiz
+              </span>
+            )}
           </div>
         </section>
 
@@ -218,7 +285,7 @@ export default function Profile() {
       {/* Edit Profile Modal */}
       {showEditModal && (
         <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center p-4">
-          <div className="bg-surface w-full max-w-md rounded-t-3xl sm:rounded-3xl p-8 shadow-2xl">
+          <div className="bg-surface w-full max-w-md rounded-t-3xl sm:rounded-3xl p-8 shadow-2xl max-h-[85vh] overflow-y-auto">
             <div className="flex justify-between items-center mb-6">
               <h3 className="font-headline font-bold text-xl">Edit Profile</h3>
               <button onClick={() => setShowEditModal(false)} className="text-on-surface-variant hover:text-on-surface">
@@ -251,6 +318,70 @@ export default function Profile() {
                   placeholder="+94 7X XXX XXXX"
                 />
               </div>
+
+              {/* Role Toggle */}
+              <div>
+                <label className="block text-[10px] font-bold uppercase tracking-widest text-on-surface-variant mb-2">
+                  Account Type
+                </label>
+                <div className="flex p-1.5 bg-surface-container-highest/60 rounded-full">
+                  <button
+                    className={`flex-1 py-3 px-6 rounded-full font-bold text-sm transition-all duration-300 ${
+                      editUserType === 'passenger'
+                        ? 'bg-primary text-white shadow-md'
+                        : 'text-on-surface-variant hover:text-on-surface'
+                    }`}
+                    type="button"
+                    onClick={() => setEditUserType('passenger')}
+                  >
+                    Passenger
+                  </button>
+                  <button
+                    className={`flex-1 py-3 px-6 rounded-full font-bold text-sm transition-all duration-300 ${
+                      editUserType === 'driver'
+                        ? 'bg-primary text-white shadow-md'
+                        : 'text-on-surface-variant hover:text-on-surface'
+                    }`}
+                    type="button"
+                    onClick={() => setEditUserType('driver')}
+                  >
+                    Driver
+                  </button>
+                </div>
+              </div>
+
+              {/* Driver Fields */}
+              {editUserType === 'driver' && (
+                <div className="space-y-4 pt-2 border-t border-outline-variant/10">
+                  <div>
+                    <label className="block text-[10px] font-bold uppercase tracking-widest text-on-surface-variant mb-2">
+                      Vehicle Type
+                    </label>
+                    <select
+                      value={editVehicleType}
+                      onChange={(e) => setEditVehicleType(e.target.value)}
+                      className="w-full px-4 py-3 rounded-xl bg-surface-container-low border border-outline-variant/20 focus:border-primary focus:ring-1 focus:ring-primary outline-none font-medium"
+                    >
+                      <option>Car</option>
+                      <option>Three-Wheeler</option>
+                      <option>Bike</option>
+                      <option>Van</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-bold uppercase tracking-widest text-on-surface-variant mb-2">
+                      License Plate
+                    </label>
+                    <input
+                      type="text"
+                      value={editLicensePlate}
+                      onChange={(e) => setEditLicensePlate(e.target.value)}
+                      className="w-full px-4 py-3 rounded-xl bg-surface-container-low border border-outline-variant/20 focus:border-primary focus:ring-1 focus:ring-primary outline-none font-medium uppercase"
+                      placeholder="ABC-1234"
+                    />
+                  </div>
+                </div>
+              )}
             </div>
 
             <button

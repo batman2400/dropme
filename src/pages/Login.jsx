@@ -17,6 +17,7 @@ export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [successMessage, setSuccessMessage] = useState('');
 
   // If already logged in, redirect to the correct page
   useEffect(() => {
@@ -101,7 +102,8 @@ export default function Login() {
       navigate('/welcome');
     } else {
       // Email confirmation required
-      setError('Check your email for a confirmation link, then log in.');
+      setSuccessMessage('Verification email sent! Check your inbox and click the link to confirm your account.');
+      setError('');
     }
     setLoading(false);
   };
@@ -145,6 +147,14 @@ export default function Login() {
               : 'The most premium way to share your journey and reduce your carbon footprint.'}
           </p>
         </section>
+
+        {/* Success Banner */}
+        {successMessage && (
+          <div className="mb-6 p-4 bg-green-50 text-green-700 border border-green-200 rounded-xl text-sm font-medium flex items-center gap-2">
+            <span className="material-symbols-outlined text-lg">check_circle</span>
+            {successMessage}
+          </div>
+        )}
 
         {/* Error Banner */}
         {error && (
@@ -327,7 +337,7 @@ export default function Login() {
               </span>
               <button
                 type="button"
-                onClick={() => { setIsLogin(!isLogin); setError(''); }}
+                onClick={() => { setIsLogin(!isLogin); setError(''); setSuccessMessage(''); }}
                 className="inline-block ml-1 text-primary font-bold hover:underline py-2 px-1 focus:ring-2 focus:ring-primary/20 rounded-md transition-all"
               >
                 {isLogin ? 'Create account' : 'Log in'}

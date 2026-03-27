@@ -14,18 +14,9 @@ export default function RideMatches() {
   const [error, setError] = useState('');
 
   useEffect(() => {
-    // If there is no request object from FindRide, handle gracefully
-    if (!request) {
-      setIsLoading(false);
-      return;
-    }
-
     const fetchMatches = async () => {
       try {
-        // Extract the main part of the dropoff location for a more forgiving fuzzy search
-        const dropoffKeyword = request.dropoff_location.split(',')[0];
-
-        const { data, error: fetchError } = await supabase
+        let query = supabase
           .from('rides')
           .select(`
             id,
@@ -41,10 +32,18 @@ export default function RideMatches() {
             )
           `)
           .eq('status', 'active')
-          .gte('available_seats', request.seats_needed)
-          .ilike('end_point', `%${dropoffKeyword}%`)
+          .gte('available_seats', 1)
           .order('departure_time', { ascending: true });
 
+        // If we have a search request, filter by destination and seats
+        if (request) {
+          const dropoffKeyword = request.dropoff_location.split(',')[0];
+          query = query
+            .gte('available_seats', request.seats_needed)
+            .ilike('end_point', `%${dropoffKeyword}%`);
+        }
+
+        const { data, error: fetchError } = await query;
         if (fetchError) throw fetchError;
         
         setRides(data || []);
@@ -73,27 +72,9 @@ export default function RideMatches() {
     window.open(`https://wa.me/${formattedPhone}?text=${text}`, '_blank');
   };
 
-  if (!request) {
-    return (
-      <div className="bg-surface font-body text-on-surface min-h-screen pb-32 pt-24 text-center px-6">
-        <TopNavBar showAvatar showNotification />
-        <span className="material-symbols-outlined text-6xl text-outline mb-4">search_off</span>
-        <h2 className="font-headline font-bold text-2xl mb-2">No Search Criteria</h2>
-        <p className="text-on-surface-variant mb-6 text-sm">Please return to the home screen and enter your destination to find rides.</p>
-        <button 
-          onClick={() => navigate('/dashboard')}
-          className="bg-primary text-white px-6 py-3 rounded-full font-bold shadow hover:opacity-90 transition-opacity"
-        >
-          Go Back
-        </button>
-        <BottomNavBar activeTab="rides" />
-      </div>
-    );
-  }
-
   // Formatting strings for UI
-  const pickupShort = request.pickup_location.split(',')[0];
-  const dropoffShort = request.dropoff_location.split(',')[0];
+  const pickupShort = request?.pickup_location?.split(',')[0] || '';
+  const dropoffShort = request?.dropoff_location?.split(',')[0] || '';
 
   return (
     <div className="bg-surface font-body text-on-surface min-h-screen selection:bg-primary-fixed">
@@ -103,10 +84,14 @@ export default function RideMatches() {
         {/* Search Context Header */}
         <section className="mt-8 mb-10">
           <p className="font-label text-[10px] font-semibold uppercase tracking-wider text-primary mb-2">
-            Available Pools
+            {request ? 'Available Pools' : 'Browse All'}
           </p>
           <h2 className="font-headline font-extrabold text-3xl tracking-tight leading-tight">
-            {pickupShort} <span className="text-primary/40 block font-normal text-xl">to</span> {dropoffShort}
+            {request ? (
+              <>{pickupShort} <span className="text-primary/40 block font-normal text-xl">to</span> {dropoffShort}</>
+            ) : (
+              'All Available Rides'
+            )}
           </h2>
           <div className="mt-4 flex items-center gap-3">
             <span className="text-sm text-on-surface-variant font-medium">
