@@ -60,14 +60,12 @@ export default function RideMatches() {
 
   const handleWhatsAppClick = (phone, rideId) => {
     if (!phone) return;
-    // Format phone number to international if not already
-    let formattedPhone = phone;
+    // Strip ALL non-digit characters (spaces, dashes, +, parentheses, etc.)
+    let formattedPhone = phone.replace(/\D/g, '');
+    // If starts with 0, replace with Sri Lanka country code
     if (formattedPhone.startsWith('0')) {
       formattedPhone = '94' + formattedPhone.substring(1);
-    } else if (formattedPhone.startsWith('+')) {
-      formattedPhone = formattedPhone.substring(1);
     }
-    
     const text = encodeURIComponent(`Hi, I saw your ride (ID: ${rideId.substring(0,6).toUpperCase()}) on dropme. Are seats still available?`);
     window.open(`https://wa.me/${formattedPhone}?text=${text}`, '_blank');
   };
