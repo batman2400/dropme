@@ -157,7 +157,7 @@ export default function RideMatches() {
                     {isBestMatch && (
                       <div className="flex justify-between items-center relative py-4">
                         <div className="z-10 bg-white/10 backdrop-blur-md px-3 py-1 rounded-full text-xs font-bold truncate max-w-[100px]">
-                          {pickupShort.substring(0,3).toUpperCase()}
+                          {(pickupShort || ride.starting_point?.split(',')[0] || '').substring(0,3).toUpperCase()}
                         </div>
                         <div className="flex-1 border-t-2 border-dashed border-white/30 mx-4 relative">
                           <span
@@ -168,7 +168,7 @@ export default function RideMatches() {
                           </span>
                         </div>
                         <div className="z-10 bg-white/10 backdrop-blur-md px-3 py-1 rounded-full text-xs font-bold truncate max-w-[100px]">
-                          {dropoffShort.substring(0,3).toUpperCase()}
+                          {(dropoffShort || ride.end_point?.split(',')[0] || '').substring(0,3).toUpperCase()}
                         </div>
                       </div>
                     )}

@@ -57,6 +57,10 @@ ALTER TABLE requests ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Users can view own profile" ON users
   FOR SELECT USING (auth.uid() = user_id);
 
+-- All authenticated users can view other users' profiles (needed for ride cards)
+CREATE POLICY "Authenticated users can view all profiles" ON users
+  FOR SELECT USING (auth.role() = 'authenticated');
+
 CREATE POLICY "Users can insert own profile" ON users
   FOR INSERT WITH CHECK (auth.uid() = user_id);
 

@@ -350,7 +350,7 @@ export default function OfferRide() {
         </section>
       </main>
 
-      <BottomNavBar activeTab="offer-ride" />
+      <BottomNavBar activeTab="home" />
     </div>
   );
 }

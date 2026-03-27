@@ -322,11 +322,6 @@ export default function FindRide() {
       </main>
 
       <BottomNavBar activeTab="home" />
-
-      {/* Simple FAB for Mobile */}
-      <button className="md:hidden fixed bottom-24 right-6 w-14 h-14 bg-primary text-white rounded-full shadow-xl flex items-center justify-center active:scale-90 transition-transform">
-        <span className="material-symbols-outlined text-3xl">search</span>
-      </button>
     </div>
   );
 }
