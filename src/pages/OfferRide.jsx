@@ -1,22 +1,16 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useJsApiLoader, Autocomplete } from '@react-google-maps/api';
+import { Autocomplete } from '@react-google-maps/api';
 import TopNavBar from '../components/TopNavBar';
 import BottomNavBar from '../components/BottomNavBar';
 import { supabase } from '../supabaseClient';
 import { useAuth } from '../contexts/AuthContext';
-
-const libraries = ['places'];
+import { useGoogleMaps } from '../contexts/GoogleMapsProvider';
 
 export default function OfferRide() {
   const navigate = useNavigate();
   const { session } = useAuth();
-  
-  // Google Maps Loading
-  const { isLoaded } = useJsApiLoader({
-    googleMapsApiKey: import.meta.env.VITE_GOOGLE_MAPS_API_KEY,
-    libraries,
-  });
+  const { isLoaded } = useGoogleMaps();
 
   // User details
   const [vehicleType, setVehicleType] = useState('Car');

@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
+import { GoogleMapsProvider } from './contexts/GoogleMapsProvider';
 import ProtectedRoute from './components/ProtectedRoute';
 import Login from './pages/Login';
 import OnboardingSuccess from './pages/OnboardingSuccess';
@@ -14,6 +15,7 @@ function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
+        <GoogleMapsProvider>
         <Routes>
           {/* Public routes */}
           <Route path="/" element={<Login />} />
@@ -28,6 +30,7 @@ function App() {
           <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
           <Route path="/activity" element={<ProtectedRoute><Activity /></ProtectedRoute>} />
         </Routes>
+        </GoogleMapsProvider>
       </AuthProvider>
     </BrowserRouter>
   );

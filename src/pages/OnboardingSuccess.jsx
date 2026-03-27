@@ -3,9 +3,11 @@ import { useNavigate } from 'react-router-dom';
 import TopNavBar from '../components/TopNavBar';
 import BottomNavBar from '../components/BottomNavBar';
 import { supabase } from '../supabaseClient';
+import { useAuth } from '../contexts/AuthContext';
 
 export default function OnboardingSuccess() {
   const navigate = useNavigate();
+  const { refreshProfile } = useAuth();
   const [loading, setLoading] = useState(false);
   const [user, setUser] = useState(null);
 
@@ -37,6 +39,9 @@ export default function OnboardingSuccess() {
 
       if (error) {
         console.error('Profile creation error:', error.message);
+      } else {
+        // Refresh the profile in AuthContext so ProtectedRoute allows navigation
+        await refreshProfile();
       }
     }
 
