@@ -2,7 +2,7 @@
 
 /* ============================================
    dropme. Design System — Tailwind v4 Theme
-   Extracted from Google Stitch HTML designs
+   Premium Mobile-First Ride Pooling UI
    ============================================ */
 
 @theme {
@@ -76,77 +76,266 @@
   --radius-xl: 0.75rem;
 }
 
-/* ── Material Symbols defaults ── */
+/* ============================================
+   GLOBAL RESETS & BASE STYLES
+   ============================================ */
+*,
+*::before,
+*::after {
+  -webkit-tap-highlight-color: transparent;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+html {
+  scroll-behavior: smooth;
+  -webkit-text-size-adjust: 100%;
+  overflow-x: hidden;
+}
+
+body {
+  min-height: 100dvh;
+  overscroll-behavior-y: contain;
+  overflow-x: hidden;
+}
+
+/* Prevent pull-to-refresh on mobile */
+body.no-overscroll {
+  overscroll-behavior: none;
+}
+
+/* ============================================
+   TYPOGRAPHY
+   ============================================ */
+.text-balance {
+  text-wrap: balance;
+}
+
+/* ============================================
+   MATERIAL SYMBOLS
+   ============================================ */
 .material-symbols-outlined {
   font-variation-settings: "FILL" 0, "wght" 300, "GRAD" 0, "opsz" 24;
 }
 
-/* ── Glass Nav (reusable) ── */
+/* ============================================
+   GLASSMORPHISM UTILITIES
+   ============================================ */
 .glass-nav {
-  background: rgba(211, 228, 254, 0.7);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  background: rgba(239, 244, 255, 0.82);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border-top: 1px solid rgba(255, 255, 255, 0.5);
 }
 
-/* ── Glass Card ── */
 .glass-card {
-  background: rgba(211, 228, 254, 0.7);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  background: rgba(255, 255, 255, 0.6);
+  backdrop-filter: blur(16px) saturate(150%);
+  -webkit-backdrop-filter: blur(16px) saturate(150%);
+  border: 1px solid rgba(255, 255, 255, 0.4);
 }
 
-/* ── Floating animation ── */
-.floating-element {
-  animation: float 6s ease-in-out infinite;
+/* ============================================
+   ANIMATIONS — GPU-accelerated via will-change
+   ============================================ */
+
+/* Fade up entrance */
+@keyframes fadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
+.animate-fade-up {
+  animation: fadeUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+  will-change: transform, opacity;
+}
+
+/* Fade in */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+.animate-fade-in {
+  animation: fadeIn 0.4s ease both;
+}
+
+/* Scale in (for cards) */
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+.animate-scale-in {
+  animation: scaleIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) both;
+  will-change: transform, opacity;
+}
+
+/* Slide up (for modals) */
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(100%);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.animate-slide-up {
+  animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+  will-change: transform, opacity;
+}
+
+/* Floating element */
 @keyframes float {
   0%, 100% { transform: translateY(0); }
   50% { transform: translateY(-10px); }
 }
+.floating-element {
+  animation: float 6s ease-in-out infinite;
+}
 
-/* ── Hanging title ── */
+/* Pulse glow (for CTA buttons) */
+@keyframes pulseGlow {
+  0%, 100% { box-shadow: 0 8px 24px rgba(0, 74, 198, 0.25); }
+  50% { box-shadow: 0 12px 36px rgba(0, 74, 198, 0.4); }
+}
+.animate-pulse-glow {
+  animation: pulseGlow 2.5s ease-in-out infinite;
+}
+
+/* Shimmer loading skeleton */
+@keyframes shimmer {
+  from { background-position: -200% 0; }
+  to { background-position: 200% 0; }
+}
+.skeleton {
+  background: linear-gradient(90deg, #e5eeff 25%, #dce9ff 50%, #e5eeff 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  border-radius: 0.75rem;
+}
+
+/* Stagger delays for lists */
+.stagger-1 { animation-delay: 0.05s; }
+.stagger-2 { animation-delay: 0.1s; }
+.stagger-3 { animation-delay: 0.15s; }
+.stagger-4 { animation-delay: 0.2s; }
+.stagger-5 { animation-delay: 0.25s; }
+
+/* ============================================
+   INTERACTIVE STATES & MICRO-INTERACTIONS
+   ============================================ */
+.interactive-card {
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1),
+              box-shadow 0.2s ease;
+}
+.interactive-card:active {
+  transform: scale(0.97);
+}
+@media (hover: hover) {
+  .interactive-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 32px rgba(11, 28, 48, 0.1);
+  }
+}
+
+/* Button press effect */
+.btn-press {
+  transition: transform 0.15s cubic-bezier(0.16, 1, 0.3, 1),
+              box-shadow 0.15s ease,
+              opacity 0.15s ease;
+}
+.btn-press:active {
+  transform: scale(0.96);
+}
+
+/* ============================================
+   FORM INPUT STYLING
+   ============================================ */
+input, select, textarea {
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+input:focus, select:focus, textarea:focus {
+  outline: none !important;
+  border-color: #004ac6 !important;
+  box-shadow: 0 0 0 3px rgba(0, 74, 198, 0.12);
+}
+
+/* ============================================
+   DESIGN TOKENS
+   ============================================ */
 .hanging-title {
   margin-left: -0.05em;
 }
 
-/* ── Role toggle active state ── */
 .role-toggle-active {
   background: white;
   color: #004ac6;
   box-shadow: 0 4px 12px rgba(11, 28, 48, 0.08);
 }
 
-/* ── Scrollbar hiding ── */
-.hide-scrollbar::-webkit-scrollbar { display: none; }
-.hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-
-/* ── Boarding pass clip path ── */
-.boarding-pass-clip {
-  clip-path: polygon(0 0, 100% 0, 100% 65%, 98% 68%, 98% 72%, 100% 75%, 100% 100%, 0 100%, 0 75%, 2% 72%, 2% 68%, 0 65%);
-}
-
-/* ── Ghost border ── */
 .ghost-border {
   border: 1px solid rgba(195, 198, 215, 0.2);
 }
 
-/* ── Tap highlight removal ── */
-.tap-highlight-none {
-  -webkit-tap-highlight-color: transparent;
+/* Scrollbar hiding */
+.hide-scrollbar::-webkit-scrollbar { display: none; }
+.hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+/* Boarding pass clip path */
+.boarding-pass-clip {
+  clip-path: polygon(0 0, 100% 0, 100% 65%, 98% 68%, 98% 72%, 100% 75%, 100% 100%, 0 100%, 0 75%, 2% 72%, 2% 68%, 0 65%);
 }
 
-/* ── Global body minimum height ── */
-body {
-  min-height: 100dvh;
+/* ============================================
+   SAFE AREAS (notch/dynamic island)
+   ============================================ */
+.pb-safe {
+  padding-bottom: max(0.5rem, env(safe-area-inset-bottom));
 }
 
-/* ── Enhanced focus states ── */
-input:focus, select:focus {
-  outline: none !important;
-  border-color: #004ac6 !important;
-  box-shadow: 0 0 0 3px rgba(0, 74, 198, 0.15);
+.pt-safe {
+  padding-top: max(0.75rem, env(safe-area-inset-top));
 }
 
-input, select {
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+/* ============================================
+   RESPONSIVE LAYOUT UTILITIES
+   ============================================ */
+.content-grid {
+  --padding-inline: 1.5rem;
+  --max-width: 640px;
+  width: min(100% - var(--padding-inline) * 2, var(--max-width));
+  margin-inline: auto;
+}
+
+@media (min-width: 768px) {
+  .content-grid {
+    --padding-inline: 2rem;
+    --max-width: 768px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .content-grid {
+    --max-width: 1024px;
+  }
+}
+
+/* ============================================
+   PAGE TRANSITIONS
+   ============================================ */
+.page-enter {
+  animation: fadeUp 0.35s cubic-bezier(0.16, 1, 0.3, 1) both;
 }

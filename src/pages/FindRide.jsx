@@ -151,13 +151,13 @@ export default function FindRide() {
   }
 
   return (
-    <div className="bg-surface font-body text-on-surface min-h-screen pb-24">
+    <div className="bg-surface font-body text-on-surface min-h-screen pb-28">
       <TopNavBar showAvatar showNotification />
 
-      <main className="max-w-screen-xl mx-auto px-6 pt-8">
-        <section className="mb-12">
+      <main className="content-grid px-6 pt-8">
+        <section className="mb-10 animate-fade-up">
           <div className="mb-8">
-            <h2 className="font-headline font-extrabold text-4xl text-on-surface leading-tight tracking-tight ml-6">
+            <h2 className="font-headline font-extrabold text-3xl sm:text-4xl text-on-surface leading-tight tracking-tight">
               Where are you <br />
               <span className="text-primary">heading today?</span>
             </h2>
@@ -170,8 +170,8 @@ export default function FindRide() {
             </div>
           )}
 
-          <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
-            <div className="md:col-span-8 bg-surface-container-low rounded-3xl p-6 space-y-6">
+          <div className="grid grid-cols-1 gap-4 animate-fade-up stagger-2">
+            <div className="bg-surface-container-low rounded-2xl p-5 sm:p-6 space-y-6">
               <div className="relative flex items-start gap-4">
                 <div className="flex flex-col items-center pt-2">
                   <span
@@ -231,8 +231,8 @@ export default function FindRide() {
               </div>
             </div>
 
-            <div className="md:col-span-4 space-y-4">
-              <div className="bg-surface-container-low rounded-3xl p-6 h-full flex flex-col justify-between">
+            <div className="space-y-4 animate-fade-up stagger-3">
+              <div className="bg-surface-container-low rounded-2xl p-5 sm:p-6 flex flex-col gap-5">
                 <div className="space-y-4">
                   <div className="space-y-1">
                     <label className="font-label text-[10px] font-semibold uppercase tracking-wider text-on-surface-variant/60 ml-1">
@@ -291,7 +291,7 @@ export default function FindRide() {
                 <button 
                   onClick={handleSearch}
                   disabled={isSearching || !pickup || !dropoff || !departureTime}
-                  className="mt-6 w-full py-4 bg-gradient-to-br from-primary to-primary-container text-white font-headline font-bold rounded-full shadow-lg active:scale-95 transition-all disabled:opacity-50 flex justify-center items-center gap-2"
+                  className="w-full py-4 bg-gradient-to-r from-primary to-primary-container text-white font-headline font-bold rounded-full shadow-lg shadow-primary/20 btn-press disabled:opacity-50 flex justify-center items-center gap-2 animate-pulse-glow"
                 >
                   {isSearching ? <span className="material-symbols-outlined animate-spin">progress_activity</span> : 'Search Routes'}
                 </button>

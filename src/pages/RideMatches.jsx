@@ -75,12 +75,12 @@ export default function RideMatches() {
   const dropoffShort = request?.dropoff_location?.split(',')[0] || '';
 
   return (
-    <div className="bg-surface font-body text-on-surface min-h-screen selection:bg-primary-fixed">
+    <div className="bg-surface font-body text-on-surface min-h-screen pb-28">
       <TopNavBar showAvatar showNotification />
 
-      <main className="px-6 pb-32">
+      <main className="px-6 pb-8 content-grid">
         {/* Search Context Header */}
-        <section className="mt-8 mb-10">
+        <section className="mt-8 mb-8 animate-fade-up">
           <p className="font-label text-[10px] font-semibold uppercase tracking-wider text-primary mb-2">
             {request ? 'Available Pools' : 'Browse All'}
           </p>
@@ -129,7 +129,7 @@ export default function RideMatches() {
               const isBestMatch = index === 0;
 
               return (
-                <div key={ride.id} className={`bg-surface-container-lowest rounded-3xl overflow-hidden shadow-[0_12px_24px_rgba(11,28,48,0.06)] relative ${!isBestMatch && 'opacity-90'}`}>
+                <div key={ride.id} className={`bg-surface-container-lowest rounded-2xl overflow-hidden shadow-sm interactive-card animate-fade-up stagger-${Math.min(index + 1, 5)} relative ${!isBestMatch && 'opacity-90'}`}>
                   {/* Card Header (Route Info) */}
                   <div className={`p-6 ${isBestMatch ? 'bg-gradient-to-br from-primary to-primary-container text-white' : 'bg-secondary-container/40'}`}>
                     <div className="flex justify-between items-start mb-6">

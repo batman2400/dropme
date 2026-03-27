@@ -135,10 +135,10 @@ export default function Login() {
     <div className="bg-surface font-body text-on-surface antialiased min-h-screen">
       <TopNavBar showHelp />
 
-      <main className="max-w-xl mx-auto px-6 pt-8 pb-24">
+      <main className="content-grid px-6 pt-8 pb-24">
         {/* Welcome Hero Section */}
-        <section className="mb-12">
-          <h1 className="text-4xl font-extrabold font-headline tracking-tight text-on-surface mb-3 hanging-title">
+        <section className="mb-10 animate-fade-up">
+          <h1 className="text-3xl sm:text-4xl font-extrabold font-headline tracking-tight text-on-surface mb-3 text-balance">
             {isLogin ? 'Welcome back.' : 'Join the collective.'}
           </h1>
           <p className="text-on-surface-variant font-body text-lg max-w-md">
@@ -165,7 +165,7 @@ export default function Login() {
         )}
 
         {/* Social Auth */}
-        <div className="mb-10">
+        <div className="mb-8 animate-fade-up stagger-2">
           <button
             onClick={handleGoogleLogin}
             disabled={loading}
@@ -190,7 +190,7 @@ export default function Login() {
         </div>
 
         {/* Main Form Stack */}
-        <form className="space-y-8" onSubmit={isLogin ? (e) => { e.preventDefault(); handleSignIn(); } : handleSignUp}>
+        <form className="space-y-6 animate-fade-up stagger-3" onSubmit={isLogin ? (e) => { e.preventDefault(); handleSignIn(); } : handleSignUp}>
           {/* Account Credentials */}
           <div className="space-y-4">
             <div className="relative">

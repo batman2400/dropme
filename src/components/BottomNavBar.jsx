@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 
 const navItems = [
   { key: 'home', icon: 'home', label: 'Home', to: '/dashboard' },
@@ -9,33 +9,40 @@ const navItems = [
 
 export default function BottomNavBar({ activeTab = 'home' }) {
   return (
-    <nav className="fixed bottom-0 left-0 w-full h-20 flex justify-around items-center px-4 pb-safe glass-nav rounded-t-[2rem] z-50 shadow-[0_-12px_24px_rgba(11,28,48,0.06)]">
-      {navItems.map((item) => {
-        const isActive = item.key === activeTab;
-        return (
-          <Link
-            key={item.key}
-            to={item.to}
-            className={
-              isActive
-                ? 'flex flex-col items-center justify-center bg-primary-container text-white rounded-full p-3 transition-all duration-300 active:scale-90 tap-highlight-none'
-                : 'flex flex-col items-center justify-center text-[#0b1c30]/50 p-3 hover:bg-[#eff4ff] rounded-full transition-all active:scale-90 tap-highlight-none'
-            }
-          >
-            <span
-              className="material-symbols-outlined"
-              style={isActive ? { fontVariationSettings: "'FILL' 1" } : undefined}
+    <nav className="fixed bottom-0 left-0 w-full glass-nav rounded-t-[1.5rem] z-50 pb-safe">
+      <div className="flex justify-around items-center h-16 max-w-lg mx-auto px-2">
+        {navItems.map((item) => {
+          const isActive = item.key === activeTab;
+          return (
+            <Link
+              key={item.key}
+              to={item.to}
+              className={`
+                relative flex flex-col items-center justify-center rounded-2xl px-4 py-2 
+                transition-all duration-300 ease-out
+                ${isActive
+                  ? 'text-primary'
+                  : 'text-on-surface-variant/50 hover:text-on-surface-variant/80'
+                }
+              `}
             >
-              {item.icon}
-            </span>
-            {!isActive && (
-              <span className="font-label text-[10px] font-semibold uppercase tracking-wider mt-1">
+              {/* Active indicator pill */}
+              {isActive && (
+                <div className="absolute -top-1 w-8 h-1 bg-primary rounded-full animate-scale-in" />
+              )}
+              <span
+                className={`material-symbols-outlined text-[22px] transition-all duration-300 ${isActive ? 'scale-110' : ''}`}
+                style={isActive ? { fontVariationSettings: "'FILL' 1, 'wght' 400" } : { fontVariationSettings: "'wght' 300" }}
+              >
+                {item.icon}
+              </span>
+              <span className={`font-label text-[9px] font-bold uppercase tracking-[0.12em] mt-0.5 transition-opacity duration-300 ${isActive ? 'opacity-100' : 'opacity-70'}`}>
                 {item.label}
               </span>
-            )}
-          </Link>
-        );
-      })}
+            </Link>
+          );
+        })}
+      </div>
     </nav>
   );
 }

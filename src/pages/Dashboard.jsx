@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import TopNavBar from '../components/TopNavBar';
 import BottomNavBar from '../components/BottomNavBar';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../supabaseClient';
@@ -54,9 +53,7 @@ export default function Dashboard() {
 
   const handleWhatsAppClick = (phone, rideId) => {
     if (!phone) return;
-    // Strip ALL non-digit characters (spaces, dashes, +, parentheses, etc.)
     let formattedPhone = phone.replace(/\D/g, '');
-    // If starts with 0, replace with Sri Lanka country code
     if (formattedPhone.startsWith('0')) {
       formattedPhone = '94' + formattedPhone.substring(1);
     }
@@ -65,29 +62,29 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="bg-surface text-on-surface font-body min-h-screen pb-32">
+    <div className="bg-surface text-on-surface font-body min-h-screen pb-28">
       {/* Top App Bar */}
-      <header className="w-full pt-12 pb-4 flex justify-between items-center px-6 max-w-screen-xl mx-auto bg-surface">
+      <header className="w-full pt-safe pb-4 flex justify-between items-center px-6 content-grid animate-fade-in">
         <div className="flex items-center gap-4">
-          <div className="w-10 h-10 rounded-full bg-primary-container flex items-center justify-center text-white font-bold text-lg">
+          <div className="w-11 h-11 rounded-full bg-gradient-to-br from-primary to-primary-container flex items-center justify-center text-white font-bold text-lg shadow-lg shadow-primary/20">
             {displayName.charAt(0).toUpperCase()}
           </div>
           <div className="flex flex-col">
-            <span className="text-on-surface-variant text-xs font-semibold uppercase tracking-wider font-label">
-              {greeting},
+            <span className="text-on-surface-variant text-[10px] font-bold uppercase tracking-[0.15em] font-label">
+              {greeting}
             </span>
             <h1 className="text-2xl font-black text-[#0b1c30] font-headline tracking-tight">dropme.</h1>
           </div>
         </div>
-        <button className="w-10 h-10 flex items-center justify-center rounded-full bg-surface-container-low text-on-surface-variant hover:opacity-80 transition-opacity active:scale-95">
+        <button className="w-10 h-10 flex items-center justify-center rounded-full bg-surface-container-low text-on-surface-variant btn-press">
           <span className="material-symbols-outlined">notifications</span>
         </button>
       </header>
 
-      <main className="px-6 space-y-8 max-w-screen-xl mx-auto">
+      <main className="px-6 space-y-8 content-grid">
         {/* Hero Greeting */}
-        <section className="mt-4">
-          <h2 className="font-headline font-bold text-3xl text-on-surface tracking-tight leading-tight">
+        <section className="mt-2 animate-fade-up">
+          <h2 className="font-headline font-bold text-3xl sm:text-4xl text-on-surface tracking-tight leading-tight text-balance">
             Where to,
             <br />
             <span className="text-primary">{displayName}?</span>
@@ -95,30 +92,33 @@ export default function Dashboard() {
         </section>
 
         {/* Quick Actions Grid */}
-        <section className="grid grid-cols-2 gap-4">
+        <section className="grid grid-cols-2 gap-4 animate-fade-up stagger-2">
           <Link
             to="/find-ride"
-            className="flex flex-col justify-between p-6 h-48 bg-primary rounded-[2rem] text-white shadow-xl relative overflow-hidden active:scale-95 transition-transform text-left"
+            className="flex flex-col justify-between p-5 sm:p-6 h-44 sm:h-48 bg-gradient-to-br from-primary to-primary-container rounded-[1.75rem] text-white shadow-xl shadow-primary/20 relative overflow-hidden btn-press text-left group"
           >
-            <div className="z-10 bg-white/20 w-12 h-12 flex items-center justify-center rounded-full backdrop-blur-md">
-              <span className="material-symbols-outlined">search</span>
+            <div className="z-10 bg-white/20 w-11 h-11 flex items-center justify-center rounded-full backdrop-blur-md group-hover:bg-white/30 transition-colors">
+              <span className="material-symbols-outlined text-xl">search</span>
             </div>
             <div className="z-10">
-              <p className="font-headline font-extrabold text-xl">
+              <p className="font-headline font-extrabold text-lg sm:text-xl leading-tight">
                 Find a<br />Ride
               </p>
             </div>
-            <div className="absolute -right-4 -top-4 w-24 h-24 bg-white/10 rounded-full blur-2xl"></div>
+            <div className="absolute -right-6 -top-6 w-28 h-28 bg-white/10 rounded-full blur-2xl"></div>
+            <div className="absolute -left-4 -bottom-4 w-20 h-20 bg-white/5 rounded-full blur-xl"></div>
           </Link>
           <Link
             to="/offer-ride"
-            className="flex flex-col justify-between p-6 h-48 bg-surface-container-highest rounded-[2rem] text-on-surface active:scale-95 transition-transform text-left"
+            className="flex flex-col justify-between p-5 sm:p-6 h-44 sm:h-48 bg-surface-container-highest rounded-[1.75rem] text-on-surface btn-press text-left group"
           >
-            <div className="bg-primary/10 w-12 h-12 flex items-center justify-center rounded-full">
-              <span className="material-symbols-outlined text-primary">steering_wheel_heat</span>
+            <div className="bg-primary/10 w-11 h-11 flex items-center justify-center rounded-full group-hover:bg-primary/20 transition-colors">
+              <span className="material-symbols-outlined text-primary text-xl" style={{ fontVariationSettings: "'FILL' 1" }}>
+                directions_car
+              </span>
             </div>
             <div>
-              <p className="font-headline font-extrabold text-xl text-primary">
+              <p className="font-headline font-extrabold text-lg sm:text-xl text-primary leading-tight">
                 Offer a<br />Ride
               </p>
             </div>
@@ -126,26 +126,39 @@ export default function Dashboard() {
         </section>
 
         {/* Live Feed: Rides Near You */}
-        <section className="space-y-6">
+        <section className="space-y-5 animate-fade-up stagger-3">
           <div className="flex justify-between items-end">
             <h3 className="font-headline font-bold text-xl">Rides Near You</h3>
-            <Link to="/ride-matches" className="text-primary font-semibold text-sm font-label uppercase tracking-widest">
-              See All
+            <Link to="/ride-matches" className="text-primary font-bold text-xs font-label uppercase tracking-[0.15em] btn-press px-2 py-1 rounded-lg">
+              See All →
             </Link>
           </div>
-          <div className="space-y-4">
+          <div className="space-y-3">
             {isLoading ? (
-              <div className="flex justify-center items-center py-12">
-                <span className="material-symbols-outlined animate-spin text-primary text-4xl">progress_activity</span>
+              /* Skeleton Loading */
+              <div className="space-y-3">
+                {[1, 2].map((i) => (
+                  <div key={i} className="bg-surface-container-lowest p-5 rounded-[1.75rem] space-y-3">
+                    <div className="flex items-center gap-3">
+                      <div className="skeleton w-10 h-10 rounded-full"></div>
+                      <div className="flex-1 space-y-2">
+                        <div className="skeleton h-4 w-2/3 rounded-lg"></div>
+                        <div className="skeleton h-3 w-1/3 rounded-lg"></div>
+                      </div>
+                      <div className="skeleton h-6 w-16 rounded-full"></div>
+                    </div>
+                    <div className="skeleton h-10 w-full rounded-lg"></div>
+                  </div>
+                ))}
               </div>
             ) : rides.length === 0 ? (
-              <div className="text-center py-12 bg-surface-container-low rounded-3xl border-2 border-dashed border-outline-variant/30">
-                <span className="material-symbols-outlined text-4xl text-outline mb-3">directions_car_off</span>
-                <p className="font-headline font-bold text-lg">No rides available</p>
+              <div className="text-center py-12 bg-surface-container-low rounded-[1.75rem] border-2 border-dashed border-outline-variant/20 animate-scale-in">
+                <span className="material-symbols-outlined text-4xl text-outline/40 mb-3 block">directions_car</span>
+                <p className="font-headline font-bold text-lg text-on-surface/80">No rides available</p>
                 <p className="text-sm text-on-surface-variant mt-1">Be the first to offer a ride today!</p>
               </div>
             ) : (
-              rides.map((ride) => {
+              rides.map((ride, index) => {
                 const driverName = ride.driver?.full_name || 'Anonymous Driver';
                 const driverPhone = ride.driver?.phone_number || '';
                 const rideTime = new Date(ride.departure_time).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
@@ -153,41 +166,43 @@ export default function Dashboard() {
                 const endShort = ride.end_point?.split(',')[0] || 'Unknown';
 
                 return (
-                  <div key={ride.id} className="bg-surface-container-lowest p-5 rounded-[2rem] flex flex-col gap-4 shadow-sm">
+                  <div
+                    key={ride.id}
+                    className={`bg-surface-container-lowest p-5 rounded-[1.75rem] flex flex-col gap-3 shadow-sm interactive-card animate-fade-up stagger-${Math.min(index + 1, 5)}`}
+                  >
                     <div className="flex justify-between items-start">
                       <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-tertiary-container flex items-center justify-center text-on-tertiary-container font-bold text-lg">
+                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-tertiary-container to-tertiary flex items-center justify-center text-white font-bold text-sm">
                           {driverName.charAt(0)}
                         </div>
                         <div>
-                          <h4 className="font-bold text-on-surface">{driverName}</h4>
+                          <h4 className="font-bold text-on-surface text-sm">{driverName}</h4>
                           <div className="flex items-center gap-1 text-on-surface-variant">
-                            <span className="material-symbols-outlined text-sm">directions_car</span>
-                            <span className="text-[10px] font-bold uppercase font-label">{ride.vehicle_type}</span>
+                            <span className="material-symbols-outlined text-xs">directions_car</span>
+                            <span className="text-[10px] font-bold uppercase font-label tracking-wider">{ride.vehicle_type}</span>
                           </div>
                         </div>
                       </div>
-                      <div className="bg-surface-container-low px-3 py-1 rounded-full text-xs font-bold text-primary font-label">
+                      <div className="bg-primary/8 px-3 py-1 rounded-full text-[11px] font-bold text-primary font-label">
                         {rideTime}
                       </div>
                     </div>
                     <div className="relative pl-6 py-1">
-                      <div className="absolute left-1 top-0 bottom-0 w-0.5 bg-outline-variant/30 flex flex-col justify-between items-center py-1">
-                        <div className="w-2 h-2 rounded-full bg-primary ring-4 ring-primary/10"></div>
-                        <div className="w-2 h-2 rounded-full bg-outline-variant"></div>
-                      </div>
-                      <div className="space-y-2">
-                        <p className="text-sm font-medium text-on-surface-variant">{startShort}</p>
+                      <div className="absolute left-[3px] top-1 bottom-1 w-[2px] bg-gradient-to-b from-primary to-outline-variant/30 rounded-full"></div>
+                      <div className="absolute left-0 top-1 w-2 h-2 rounded-full bg-primary ring-[3px] ring-primary/10"></div>
+                      <div className="absolute left-0 bottom-1 w-2 h-2 rounded-full bg-outline-variant/50"></div>
+                      <div className="space-y-1.5">
+                        <p className="text-xs font-medium text-on-surface-variant">{startShort}</p>
                         <p className="text-sm font-bold text-on-surface">{endShort}</p>
                       </div>
                     </div>
-                    <div className="flex items-center justify-between pt-2">
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs font-bold text-tertiary bg-tertiary/10 px-3 py-1 rounded-full">
+                    <div className="flex items-center justify-between pt-1">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="text-[10px] font-bold text-tertiary bg-tertiary/8 px-2.5 py-1 rounded-full">
                           {ride.available_seats} seat{ride.available_seats > 1 ? 's' : ''} left
                         </span>
                         {ride.calculated_fare && (
-                          <span className="text-xs font-bold text-primary bg-primary/10 px-3 py-1 rounded-full">
+                          <span className="text-[10px] font-bold text-primary bg-primary/8 px-2.5 py-1 rounded-full">
                             Rs. {ride.calculated_fare}
                           </span>
                         )}
@@ -195,7 +210,7 @@ export default function Dashboard() {
                       <button
                         onClick={() => handleWhatsAppClick(driverPhone, ride.id)}
                         disabled={!driverPhone}
-                        className="bg-primary-container text-white px-5 py-2.5 rounded-full text-xs font-bold font-label uppercase tracking-widest active:scale-90 transition-transform disabled:opacity-50"
+                        className="bg-gradient-to-r from-primary to-primary-container text-white px-4 py-2 rounded-full text-[10px] font-bold font-label uppercase tracking-[0.12em] btn-press shadow-md shadow-primary/15 disabled:opacity-40"
                       >
                         Join Ride
                       </button>

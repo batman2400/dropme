@@ -74,11 +74,11 @@ export default function Activity() {
   };
 
   return (
-    <div className="bg-surface font-body text-on-surface min-h-screen pb-32">
+    <div className="bg-surface font-body text-on-surface min-h-screen pb-28">
       <TopNavBar showAvatar showNotification />
 
-      <main className="px-6 pt-8 max-w-screen-xl mx-auto">
-        <section className="mb-8">
+      <main className="px-6 pt-8 content-grid">
+        <section className="mb-8 animate-fade-up">
           <p className="font-label text-[10px] font-semibold uppercase tracking-wider text-primary mb-2">
             Your History
           </p>
@@ -103,8 +103,8 @@ export default function Activity() {
               </p>
             </div>
           ) : (
-            items.map((item) => (
-              <div key={item.id} className="bg-surface-container-lowest p-5 rounded-3xl shadow-sm flex items-start gap-4">
+            items.map((item, index) => (
+              <div key={item.id} className={`bg-surface-container-lowest p-5 rounded-2xl shadow-sm flex items-start gap-4 interactive-card animate-fade-up stagger-${Math.min(index + 1, 5)}`}>
                 <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 mt-0.5 ${isDriver ? 'bg-tertiary/10' : 'bg-primary/10'}`}>
                   <span className={`material-symbols-outlined text-xl ${isDriver ? 'text-tertiary' : 'text-primary'}`}>
                     {isDriver ? 'steering_wheel_heat' : 'directions_car'}

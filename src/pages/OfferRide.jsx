@@ -180,11 +180,11 @@ export default function OfferRide() {
   }
 
   return (
-    <div className="bg-surface font-body text-on-surface min-h-screen pb-32">
+    <div className="bg-surface font-body text-on-surface min-h-screen pb-28">
       <TopNavBar showAvatar showNotification />
 
-      <main className="px-6 mt-4 max-w-xl mx-auto">
-        <section className="mb-10">
+      <main className="px-6 mt-4 content-grid">
+        <section className="mb-8 animate-fade-up">
           <span className="font-label text-[10px] font-semibold uppercase tracking-wider text-primary mb-2 block">
             Driver Console
           </span>
@@ -260,7 +260,7 @@ export default function OfferRide() {
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-2 gap-3 animate-fade-up stagger-3">
             {/* Departure Time */}
             <div className="bg-surface-container-low rounded-xl p-5">
               <div className="flex items-center gap-2 mb-3">
@@ -298,7 +298,7 @@ export default function OfferRide() {
           </div>
 
           {/* Route Preview Card (Dynamic Pricing) */}
-          <div className="bg-surface-container-high rounded-xl p-4 flex gap-4 overflow-hidden min-h-[140px] relative">
+          <div className="bg-surface-container-high rounded-2xl p-4 flex gap-4 overflow-hidden min-h-[130px] relative animate-fade-up stagger-4">
             <div className="flex-1 py-1 z-10">
               <p className="font-headline font-bold text-lg mb-1">Estimated Earnings</p>
               <p className="text-xs text-on-surface-variant mb-4 leading-relaxed">
@@ -335,7 +335,7 @@ export default function OfferRide() {
           <button 
             onClick={handlePublish}
             disabled={isPublishing || !pickup || !dropoff || !departureTime}
-            className="w-full flex items-center justify-center gap-2 bg-gradient-to-br from-primary to-primary-container text-white py-5 rounded-full font-headline font-extrabold text-lg tracking-tight shadow-lg hover:-translate-y-0.5 active:scale-95 transition-all disabled:opacity-50 disabled:hover:translate-y-0"
+            className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-primary to-primary-container text-white py-4 sm:py-5 rounded-full font-headline font-extrabold text-lg tracking-tight shadow-lg shadow-primary/20 btn-press disabled:opacity-50 animate-pulse-glow"
           >
             {isPublishing ? (
               <span className="material-symbols-outlined animate-spin">progress_activity</span>

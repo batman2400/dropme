@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import TopNavBar from '../components/TopNavBar';
 import BottomNavBar from '../components/BottomNavBar';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../supabaseClient';
@@ -21,8 +20,6 @@ export default function Profile() {
 
   useEffect(() => {
     if (!profile) return;
-
-    // Count rides for this user
     const countRides = async () => {
       if (profile.user_type === 'driver') {
         const { count, error } = await supabase
@@ -60,12 +57,10 @@ export default function Profile() {
         vehicle_type: editUserType === 'driver' ? editVehicleType : null,
         license_plate: editUserType === 'driver' ? editLicensePlate : null,
       };
-
       const { error } = await supabase
         .from('users')
         .update(updateData)
         .eq('id', profile.id);
-
       if (error) throw error;
       await refreshProfile();
       setShowEditModal(false);
@@ -79,8 +74,6 @@ export default function Profile() {
 
   const handleQuickRoleSwitch = async () => {
     const newRole = profile?.user_type === 'driver' ? 'passenger' : 'driver';
-
-    // If switching to driver and no vehicle info, open edit modal instead
     if (newRole === 'driver' && !profile?.vehicle_type) {
       setEditPhone(profile?.phone_number || '');
       setEditName(profile?.full_name || '');
@@ -90,14 +83,12 @@ export default function Profile() {
       setShowEditModal(true);
       return;
     }
-
     setSwitchingRole(true);
     try {
       const { error } = await supabase
         .from('users')
         .update({ user_type: newRole })
         .eq('id', profile.id);
-
       if (error) throw error;
       await refreshProfile();
     } catch (err) {
@@ -114,289 +105,184 @@ export default function Profile() {
   };
 
   const displayName = profile?.full_name || 'New User';
-  const displayPhone = profile?.phone_number || 'Not set';
   const isDriver = profile?.user_type === 'driver';
 
   return (
-    <div className="bg-surface text-on-surface font-body min-h-screen selection:bg-primary/20">
-      {/* Top App Bar */}
-      <header className="w-full pt-12 pb-4 bg-surface flex justify-between items-center px-6 max-w-screen-xl mx-auto">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-primary-container flex items-center justify-center text-white font-bold text-lg">
-            {displayName.charAt(0).toUpperCase()}
+    <div className="bg-surface text-on-surface font-body min-h-screen">
+      {/* Gradient Header */}
+      <div className="bg-gradient-to-b from-primary/5 to-surface pt-safe pb-6 px-6">
+        <div className="content-grid">
+          <div className="flex justify-between items-center mb-8 animate-fade-in">
+            <h1 className="font-headline font-bold tracking-tight text-2xl text-[#0b1c30]">dropme.</h1>
+            <button className="text-on-surface-variant btn-press p-2 rounded-full">
+              <span className="material-symbols-outlined">settings</span>
+            </button>
           </div>
-          <h1 className="font-headline font-bold tracking-tight text-2xl text-[#0b1c30]">dropme.</h1>
-        </div>
-        <button className="text-primary-container hover:opacity-80 transition-opacity active:scale-95">
-          <span className="material-symbols-outlined">notifications</span>
-        </button>
-      </header>
 
-      <main className="px-6 pb-32 max-w-screen-xl mx-auto">
-        {/* Profile Header Section */}
-        <section className="mt-8 mb-10">
-          <div className="flex items-center justify-between mb-2">
-            <h2 className="font-headline font-extrabold text-3xl tracking-tight text-on-surface">{displayName}</h2>
-            <div className="flex items-center gap-1.5 bg-primary-container/10 px-3 py-1 rounded-full border border-primary/10">
-              <span
-                className="material-symbols-outlined text-primary text-[18px]"
-                style={{ fontVariationSettings: "'FILL' 1" }}
-              >
+          {/* Profile Header */}
+          <div className="flex flex-col items-center text-center animate-fade-up">
+            <div className="w-20 h-20 rounded-full bg-gradient-to-br from-primary to-primary-container flex items-center justify-center text-white font-bold text-2xl shadow-xl shadow-primary/20 mb-4">
+              {displayName.charAt(0).toUpperCase()}
+            </div>
+            <h2 className="font-headline font-extrabold text-2xl tracking-tight text-on-surface mb-1">{displayName}</h2>
+            <div className="flex items-center gap-1.5 bg-primary/8 px-3 py-1 rounded-full mb-3">
+              <span className="material-symbols-outlined text-primary text-[14px]" style={{ fontVariationSettings: "'FILL' 1" }}>
                 {isDriver ? 'verified' : 'person'}
               </span>
-              <span className="text-primary font-bold text-[11px] uppercase tracking-wider">
+              <span className="text-primary font-bold text-[10px] uppercase tracking-[0.15em]">
                 {isDriver ? 'Verified Driver' : 'Passenger'}
               </span>
             </div>
+            <button
+              onClick={handleOpenEdit}
+              className="flex items-center gap-2 bg-primary text-white px-5 py-2.5 rounded-full font-label text-xs font-bold uppercase tracking-[0.12em] btn-press shadow-md shadow-primary/20"
+            >
+              <span className="material-symbols-outlined text-base">edit</span>
+              Edit Profile
+            </button>
           </div>
-          <p className="text-on-surface-variant font-medium">
-            {profile?.vehicle_type ? `${profile.vehicle_type} Driver` : 'Ready to share rides'}
-          </p>
-          <button
-            onClick={handleOpenEdit}
-            className="mt-4 flex items-center gap-2 bg-primary/10 text-primary px-5 py-2.5 rounded-full font-label text-sm font-bold uppercase tracking-wider hover:bg-primary/20 active:scale-95 transition-all"
-          >
-            <span className="material-symbols-outlined text-lg">edit</span>
-            Edit Profile
+        </div>
+      </div>
+
+      <main className="px-6 pb-28 content-grid -mt-2">
+        {/* Stats Row */}
+        <section className="grid grid-cols-2 gap-3 mb-8 animate-fade-up stagger-2">
+          <div className="bg-surface-container-lowest rounded-2xl p-5 flex flex-col gap-3 border border-outline-variant/8 interactive-card">
+            <span className="font-label text-[9px] font-bold uppercase tracking-[0.15em] text-on-surface-variant/60">
+              Rating
+            </span>
+            <div className="flex items-center gap-1.5">
+              <span className="font-headline font-black text-3xl text-on-surface">4.9</span>
+              <span className="material-symbols-outlined text-amber-400 text-lg" style={{ fontVariationSettings: "'FILL' 1" }}>star</span>
+            </div>
+          </div>
+          <div className="bg-surface-container-lowest rounded-2xl p-5 flex flex-col gap-3 border border-outline-variant/8 interactive-card">
+            <span className="font-label text-[9px] font-bold uppercase tracking-[0.15em] text-on-surface-variant/60">
+              {isDriver ? 'Rides Offered' : 'Rides Taken'}
+            </span>
+            <span className="font-headline font-black text-3xl text-on-surface">{ridesCount}</span>
+          </div>
+        </section>
+
+        {/* Settings Cards */}
+        <section className="space-y-2 animate-fade-up stagger-3">
+          <h3 className="font-headline font-bold text-lg px-1 mb-3">Details</h3>
+
+          {/* WhatsApp */}
+          <button onClick={handleOpenEdit} className="w-full bg-surface-container-lowest rounded-2xl p-4 flex items-center gap-4 border border-outline-variant/8 interactive-card text-left">
+            <div className="w-10 h-10 rounded-xl bg-primary/8 flex items-center justify-center shrink-0">
+              <span className="material-symbols-outlined text-primary text-xl">call</span>
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-[9px] font-bold uppercase tracking-[0.15em] text-on-surface-variant/60">WhatsApp</p>
+              <p className="font-semibold text-on-surface text-sm truncate">{profile?.phone_number || 'Not set'}</p>
+            </div>
+            <span className="material-symbols-outlined text-on-surface-variant/30 text-lg">chevron_right</span>
+          </button>
+
+          {/* Vehicle */}
+          <button onClick={handleOpenEdit} className="w-full bg-surface-container-lowest rounded-2xl p-4 flex items-center gap-4 border border-outline-variant/8 interactive-card text-left">
+            <div className="w-10 h-10 rounded-xl bg-tertiary/8 flex items-center justify-center shrink-0">
+              <span className="material-symbols-outlined text-tertiary text-xl">directions_car</span>
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-[9px] font-bold uppercase tracking-[0.15em] text-on-surface-variant/60">Vehicle</p>
+              <p className="font-semibold text-on-surface text-sm truncate">
+                {profile?.vehicle_type || 'Not registered'}{profile?.license_plate ? ` · ${profile.license_plate}` : ''}
+              </p>
+            </div>
+            <span className="material-symbols-outlined text-on-surface-variant/30 text-lg">chevron_right</span>
+          </button>
+
+          {/* Role Switch */}
+          <button onClick={handleQuickRoleSwitch} disabled={switchingRole} className="w-full bg-surface-container-lowest rounded-2xl p-4 flex items-center gap-4 border border-outline-variant/8 interactive-card text-left disabled:opacity-60">
+            <div className="w-10 h-10 rounded-xl bg-secondary/8 flex items-center justify-center shrink-0">
+              <span className="material-symbols-outlined text-secondary text-xl">swap_horiz</span>
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-[9px] font-bold uppercase tracking-[0.15em] text-on-surface-variant/60">Account Type</p>
+              <p className="font-semibold text-on-surface text-sm capitalize">{profile?.user_type || 'Passenger'}</p>
+              <p className="text-[10px] text-primary font-semibold mt-0.5">
+                Tap to switch to {isDriver ? 'Passenger' : 'Driver'}
+              </p>
+            </div>
+            {switchingRole ? (
+              <span className="material-symbols-outlined text-primary animate-spin text-lg">progress_activity</span>
+            ) : (
+              <span className="material-symbols-outlined text-on-surface-variant/30 text-lg">chevron_right</span>
+            )}
           </button>
         </section>
 
-        {/* Stats Grid */}
-        <section className="grid grid-cols-2 gap-3 mb-12">
-          {/* Community Rating */}
-          <div className="bg-surface-container-lowest rounded-[2rem] p-5 flex flex-col justify-between aspect-square border border-outline-variant/10">
-            <span className="font-label text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">
-              Rating
-            </span>
-            <div>
-              <div className="flex items-center gap-1 mb-1">
-                <span className="font-headline font-black text-4xl text-on-surface">4.9</span>
-                <span
-                  className="material-symbols-outlined text-primary"
-                  style={{ fontVariationSettings: "'FILL' 1" }}
-                >
-                  star
-                </span>
-              </div>
-              <span className="text-[11px] font-medium text-on-surface-variant">
-                {isDriver ? 'Top 5% of drivers' : 'Community member'}
-              </span>
-            </div>
-          </div>
-          {/* Rides Shared */}
-          <div className="bg-surface-container-lowest rounded-[2rem] p-5 flex flex-col justify-between aspect-square border border-outline-variant/10">
-            <span className="font-label text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">
-              {isDriver ? 'Rides Offered' : 'Rides Taken'}
-            </span>
-            <div>
-              <span className="font-headline font-black text-4xl text-on-surface">{ridesCount}</span>
-              <div className="flex items-center gap-1 mt-1 text-[11px] font-semibold text-primary">
-                <span>{isDriver ? 'Routes published' : 'Rides requested'}</span>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* Account Settings & Credentials */}
-        <section className="space-y-4">
-          <h3 className="font-headline font-bold text-xl px-2 mb-4">Credentials &amp; Contact</h3>
-          {/* WhatsApp Card */}
-          <div
-            onClick={handleOpenEdit}
-            className="bg-surface-container-low rounded-[1.5rem] p-5 flex items-center justify-between group cursor-pointer hover:bg-surface-container transition-colors"
-          >
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-full bg-white flex items-center justify-center text-primary shadow-sm">
-                <span className="material-symbols-outlined">call</span>
-              </div>
-              <div>
-                <p className="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">
-                  WhatsApp Number
-                </p>
-                <p className="font-headline font-bold text-on-surface">{displayPhone}</p>
-              </div>
-            </div>
-            <span className="material-symbols-outlined text-on-surface-variant/40 group-hover:text-primary transition-colors">
-              edit_square
-            </span>
-          </div>
-          {/* Vehicle Card */}
-          <div
-            onClick={handleOpenEdit}
-            className="bg-surface-container-low rounded-[1.5rem] p-5 flex items-center justify-between group cursor-pointer hover:bg-surface-container transition-colors"
-          >
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-full bg-white flex items-center justify-center text-primary shadow-sm">
-                <span className="material-symbols-outlined">directions_car</span>
-              </div>
-              <div>
-                <p className="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">
-                  Primary Vehicle
-                </p>
-                <p className="font-headline font-bold text-on-surface">
-                  {profile?.vehicle_type || 'Not registered'}{profile?.license_plate ? ` • ${profile.license_plate}` : ''}
-                </p>
-              </div>
-            </div>
-            <span className="material-symbols-outlined text-on-surface-variant/40 group-hover:text-primary transition-colors">
-              edit_square
-            </span>
-          </div>
-          {/* Account Type Card — CLICKABLE TO SWITCH */}
-          <div
-            onClick={handleQuickRoleSwitch}
-            className="bg-surface-container-low rounded-[1.5rem] p-5 flex items-center justify-between group cursor-pointer hover:bg-surface-container transition-colors"
-          >
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-full bg-white flex items-center justify-center text-primary shadow-sm">
-                <span className="material-symbols-outlined">badge</span>
-              </div>
-              <div>
-                <p className="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">
-                  Account Type
-                </p>
-                <p className="font-headline font-bold text-on-surface capitalize">
-                  {profile?.user_type || 'Passenger'}
-                </p>
-                <p className="text-[10px] text-primary font-semibold mt-0.5">
-                  Tap to switch to {isDriver ? 'Passenger' : 'Driver'}
-                </p>
-              </div>
-            </div>
-            {switchingRole ? (
-              <span className="material-symbols-outlined text-primary animate-spin">progress_activity</span>
-            ) : (
-              <span className="material-symbols-outlined text-on-surface-variant/40 group-hover:text-primary transition-colors">
-                swap_horiz
-              </span>
-            )}
-          </div>
-        </section>
-
-        {/* Log Out Button */}
+        {/* Log Out */}
         <button
           onClick={handleLogout}
-          className="w-full mt-12 py-4 rounded-full border border-error/20 text-error font-headline font-bold tracking-tight hover:bg-error/5 transition-colors"
+          className="w-full mt-10 py-3.5 rounded-2xl border border-error/15 text-error font-bold text-sm btn-press hover:bg-error/5 transition-colors"
         >
-          Log Out Account
+          Log Out
         </button>
       </main>
 
-      {/* Edit Profile Modal */}
+      {/* Edit Modal */}
       {showEditModal && (
-        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center p-4">
-          <div className="bg-surface w-full max-w-md rounded-t-3xl sm:rounded-3xl p-8 shadow-2xl max-h-[85vh] overflow-y-auto">
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center animate-fade-in">
+          <div className="bg-surface w-full max-w-md rounded-t-3xl sm:rounded-3xl p-7 shadow-2xl max-h-[85vh] overflow-y-auto animate-slide-up">
             <div className="flex justify-between items-center mb-6">
               <h3 className="font-headline font-bold text-xl">Edit Profile</h3>
-              <button onClick={() => setShowEditModal(false)} className="text-on-surface-variant hover:text-on-surface">
+              <button onClick={() => setShowEditModal(false)} className="text-on-surface-variant hover:text-on-surface btn-press p-1 rounded-full">
                 <span className="material-symbols-outlined">close</span>
               </button>
             </div>
 
             <div className="space-y-4">
               <div>
-                <label className="block text-[10px] font-bold uppercase tracking-widest text-on-surface-variant mb-2">
-                  Full Name
-                </label>
-                <input
-                  type="text"
-                  value={editName}
-                  onChange={(e) => setEditName(e.target.value)}
-                  className="w-full px-4 py-3 rounded-xl bg-surface-container-low border border-outline-variant/20 focus:border-primary focus:ring-1 focus:ring-primary outline-none font-medium"
-                  placeholder="Your name"
-                />
+                <label className="block text-[9px] font-bold uppercase tracking-[0.15em] text-on-surface-variant/60 mb-2">Full Name</label>
+                <input type="text" value={editName} onChange={(e) => setEditName(e.target.value)}
+                  className="w-full px-4 py-3 rounded-xl bg-surface-container-low border border-outline-variant/15 font-medium text-sm" placeholder="Your name" />
               </div>
               <div>
-                <label className="block text-[10px] font-bold uppercase tracking-widest text-on-surface-variant mb-2">
-                  WhatsApp Number
-                </label>
-                <input
-                  type="tel"
-                  value={editPhone}
-                  onChange={(e) => setEditPhone(e.target.value)}
-                  className="w-full px-4 py-3 rounded-xl bg-surface-container-low border border-outline-variant/20 focus:border-primary focus:ring-1 focus:ring-primary outline-none font-medium"
-                  placeholder="+94 7X XXX XXXX"
-                />
+                <label className="block text-[9px] font-bold uppercase tracking-[0.15em] text-on-surface-variant/60 mb-2">WhatsApp Number</label>
+                <input type="tel" value={editPhone} onChange={(e) => setEditPhone(e.target.value)}
+                  className="w-full px-4 py-3 rounded-xl bg-surface-container-low border border-outline-variant/15 font-medium text-sm" placeholder="+94 7X XXX XXXX" />
               </div>
-
-              {/* Role Toggle */}
               <div>
-                <label className="block text-[10px] font-bold uppercase tracking-widest text-on-surface-variant mb-2">
-                  Account Type
-                </label>
-                <div className="flex p-1.5 bg-surface-container-highest/60 rounded-full">
+                <label className="block text-[9px] font-bold uppercase tracking-[0.15em] text-on-surface-variant/60 mb-2">Account Type</label>
+                <div className="flex p-1 bg-surface-container-highest/50 rounded-full">
                   <button
-                    className={`flex-1 py-3 px-6 rounded-full font-bold text-sm transition-all duration-300 ${
-                      editUserType === 'passenger'
-                        ? 'bg-primary text-white shadow-md'
-                        : 'text-on-surface-variant hover:text-on-surface'
-                    }`}
-                    type="button"
-                    onClick={() => setEditUserType('passenger')}
-                  >
+                    className={`flex-1 py-2.5 rounded-full font-bold text-sm transition-all duration-300 ${editUserType === 'passenger' ? 'bg-primary text-white shadow-md' : 'text-on-surface-variant'}`}
+                    type="button" onClick={() => setEditUserType('passenger')}>
                     Passenger
                   </button>
                   <button
-                    className={`flex-1 py-3 px-6 rounded-full font-bold text-sm transition-all duration-300 ${
-                      editUserType === 'driver'
-                        ? 'bg-primary text-white shadow-md'
-                        : 'text-on-surface-variant hover:text-on-surface'
-                    }`}
-                    type="button"
-                    onClick={() => setEditUserType('driver')}
-                  >
+                    className={`flex-1 py-2.5 rounded-full font-bold text-sm transition-all duration-300 ${editUserType === 'driver' ? 'bg-primary text-white shadow-md' : 'text-on-surface-variant'}`}
+                    type="button" onClick={() => setEditUserType('driver')}>
                     Driver
                   </button>
                 </div>
               </div>
-
-              {/* Driver Fields */}
               {editUserType === 'driver' && (
-                <div className="space-y-4 pt-2 border-t border-outline-variant/10">
+                <div className="space-y-4 pt-3 border-t border-outline-variant/10 animate-fade-up">
                   <div>
-                    <label className="block text-[10px] font-bold uppercase tracking-widest text-on-surface-variant mb-2">
-                      Vehicle Type
-                    </label>
-                    <select
-                      value={editVehicleType}
-                      onChange={(e) => setEditVehicleType(e.target.value)}
-                      className="w-full px-4 py-3 rounded-xl bg-surface-container-low border border-outline-variant/20 focus:border-primary focus:ring-1 focus:ring-primary outline-none font-medium"
-                    >
-                      <option>Car</option>
-                      <option>Three-Wheeler</option>
-                      <option>Bike</option>
-                      <option>Van</option>
+                    <label className="block text-[9px] font-bold uppercase tracking-[0.15em] text-on-surface-variant/60 mb-2">Vehicle Type</label>
+                    <select value={editVehicleType} onChange={(e) => setEditVehicleType(e.target.value)}
+                      className="w-full px-4 py-3 rounded-xl bg-surface-container-low border border-outline-variant/15 font-medium text-sm">
+                      <option>Car</option><option>Three-Wheeler</option><option>Bike</option><option>Van</option>
                     </select>
                   </div>
                   <div>
-                    <label className="block text-[10px] font-bold uppercase tracking-widest text-on-surface-variant mb-2">
-                      License Plate
-                    </label>
-                    <input
-                      type="text"
-                      value={editLicensePlate}
-                      onChange={(e) => setEditLicensePlate(e.target.value)}
-                      className="w-full px-4 py-3 rounded-xl bg-surface-container-low border border-outline-variant/20 focus:border-primary focus:ring-1 focus:ring-primary outline-none font-medium uppercase"
-                      placeholder="ABC-1234"
-                    />
+                    <label className="block text-[9px] font-bold uppercase tracking-[0.15em] text-on-surface-variant/60 mb-2">License Plate</label>
+                    <input type="text" value={editLicensePlate} onChange={(e) => setEditLicensePlate(e.target.value)}
+                      className="w-full px-4 py-3 rounded-xl bg-surface-container-low border border-outline-variant/15 font-medium text-sm uppercase" placeholder="ABC-1234" />
                   </div>
                 </div>
               )}
             </div>
 
-            <button
-              onClick={handleSaveProfile}
-              disabled={saving}
-              className="w-full mt-6 bg-primary text-white font-bold py-4 rounded-full shadow-md hover:opacity-90 active:scale-95 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
-            >
+            <button onClick={handleSaveProfile} disabled={saving}
+              className="w-full mt-6 bg-gradient-to-r from-primary to-primary-container text-white font-bold py-3.5 rounded-full shadow-lg shadow-primary/20 btn-press disabled:opacity-50 flex items-center justify-center gap-2">
               {saving ? (
-                <>
-                  <span className="material-symbols-outlined animate-spin text-lg">progress_activity</span>
-                  Saving...
-                </>
-              ) : (
-                'Save Changes'
-              )}
+                <><span className="material-symbols-outlined animate-spin text-lg">progress_activity</span> Saving...</>
+              ) : 'Save Changes'}
             </button>
           </div>
         </div>
