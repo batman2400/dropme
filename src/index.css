@@ -90,19 +90,16 @@
 html {
   scroll-behavior: smooth;
   -webkit-text-size-adjust: 100%;
-  overflow-x: hidden;
 }
 
 body {
   min-height: 100dvh;
-  overscroll-behavior-y: contain;
   overflow-x: hidden;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
-/* Prevent pull-to-refresh on mobile */
-body.no-overscroll {
-  overscroll-behavior: none;
-}
+
 
 /* ============================================
    TYPOGRAPHY
