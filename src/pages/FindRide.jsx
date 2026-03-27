@@ -99,12 +99,18 @@ export default function FindRide() {
 
     const { data: userData, error: userError } = await supabase
       .from('users')
-      .select('id')
+      .select('id, phone_number')
       .eq('user_id', session.user.id)
       .single();
 
     if (userError) {
       setError('Could not verify profile.');
+      setIsSearching(false);
+      return;
+    }
+
+    if (!userData.phone_number) {
+      setError('Please add your WhatsApp number in your Profile before searching for rides.');
       setIsSearching(false);
       return;
     }
@@ -295,26 +301,6 @@ export default function FindRide() {
                 >
                   {isSearching ? <span className="material-symbols-outlined animate-spin">progress_activity</span> : 'Search Routes'}
                 </button>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* Suggested Routes / Quick Actions */}
-        <section>
-          <div className="flex justify-between items-end mb-6">
-            <h3 className="font-headline font-bold text-xl text-on-surface ml-6">Recent Journeys</h3>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            <div className="bg-surface-container-lowest p-5 rounded-3xl shadow-sm hover:shadow-md transition-shadow group cursor-pointer">
-              <div className="flex justify-between items-start mb-4">
-                <div className="p-3 rounded-2xl bg-tertiary-container/10">
-                  <span className="material-symbols-outlined text-tertiary">work</span>
-                </div>
-              </div>
-              <div className="space-y-1">
-                <p className="font-headline font-bold text-on-surface">Majestic City, Bambalapitiya</p>
-                <p className="text-on-surface-variant/60 text-sm">18 mins average commute</p>
               </div>
             </div>
           </div>

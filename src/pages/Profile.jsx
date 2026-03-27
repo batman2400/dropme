@@ -149,11 +149,11 @@ export default function Profile() {
         <section className="grid grid-cols-2 gap-3 mb-8 animate-fade-up stagger-2">
           <div className="bg-surface-container-lowest rounded-2xl p-5 flex flex-col gap-3 border border-outline-variant/8 interactive-card">
             <span className="font-label text-[9px] font-bold uppercase tracking-[0.15em] text-on-surface-variant/60">
-              Rating
+              Status
             </span>
             <div className="flex items-center gap-1.5">
-              <span className="font-headline font-black text-3xl text-on-surface">4.9</span>
-              <span className="material-symbols-outlined text-amber-400 text-lg" style={{ fontVariationSettings: "'FILL' 1" }}>star</span>
+              <span className="material-symbols-outlined text-tertiary text-lg" style={{ fontVariationSettings: "'FILL' 1" }}>verified</span>
+              <span className="font-headline font-bold text-lg text-on-surface">Active</span>
             </div>
           </div>
           <div className="bg-surface-container-lowest rounded-2xl p-5 flex flex-col gap-3 border border-outline-variant/8 interactive-card">

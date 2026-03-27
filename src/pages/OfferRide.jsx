@@ -129,10 +129,10 @@ export default function OfferRide() {
     setError('');
     setIsPublishing(true);
 
-    // Get the user's uuid from the 'users' table linking to auth
+    // Get the user's full profile to validate driver details
     const { data: userData, error: userError } = await supabase
       .from('users')
-      .select('id')
+      .select('id, vehicle_type, license_plate, phone_number, user_type')
       .eq('user_id', session.user.id)
       .single();
 
@@ -142,11 +142,27 @@ export default function OfferRide() {
       return;
     }
 
-    // Insert into rides table
-    // Note: requires calculated_fare column in rides table
+    // Validate driver has required info
+    if (!userData.phone_number) {
+      setError('Please add your WhatsApp number in your Profile before publishing a ride.');
+      setIsPublishing(false);
+      return;
+    }
+    if (!userData.vehicle_type || !userData.license_plate) {
+      setError('Please complete your vehicle details in your Profile before publishing a ride.');
+      setIsPublishing(false);
+      return;
+    }
+
+    // Build departure date
     const [hours, minutes] = departureTime.split(':');
     const departureDate = new Date();
     departureDate.setHours(parseInt(hours, 10), parseInt(minutes, 10), 0, 0);
+
+    // If departure time is in the past, set it to tomorrow
+    if (departureDate < new Date()) {
+      departureDate.setDate(departureDate.getDate() + 1);
+    }
 
     const { error: insertError } = await supabase
       .from('rides')
@@ -156,8 +172,8 @@ export default function OfferRide() {
         end_point: dropoff.address,
         departure_time: departureDate.toISOString(),
         available_seats: availableSeats,
-        vehicle_type: vehicleType,
-        calculated_fare: calculatedFare, // Ensure this column exists in DB
+        vehicle_type: userData.vehicle_type, // Use profile vehicle, not local state
+        calculated_fare: calculatedFare,
       });
 
     if (insertError) {
@@ -165,7 +181,7 @@ export default function OfferRide() {
       setIsPublishing(false);
     } else {
       setIsPublishing(false);
-      navigate('/dashboard'); // or a success page
+      navigate('/dashboard');
     }
   };
 

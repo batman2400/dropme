@@ -191,10 +191,8 @@ export default function RideMatches() {
                         <div>
                           <h3 className="font-bold text-lg">{driverName}</h3>
                           <div className="flex items-center gap-1 text-xs font-semibold text-on-surface-variant">
-                            <span className="material-symbols-outlined text-[14px] text-amber-400" style={{ fontVariationSettings: "'FILL' 1" }}>star</span>
-                            <span>4.9</span>
-                            <span className="mx-1">•</span>
-                            <span>{ride.vehicle_type} ({ride.available_seats} seats)</span>
+                            <span className="material-symbols-outlined text-[14px]">directions_car</span>
+                            <span>{ride.vehicle_type} · {ride.available_seats} seat{ride.available_seats > 1 ? 's' : ''}</span>
                           </div>
                         </div>
                       </div>
