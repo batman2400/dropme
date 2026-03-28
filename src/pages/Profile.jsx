@@ -191,8 +191,8 @@ export default function Profile() {
 
       {/* Edit Modal */}
       {showEditModal && (
-        <div className="fixed inset-0 bg-black/30 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center animate-fade-in">
-          <div className="bg-surface w-full max-w-md rounded-t-2xl sm:rounded-2xl p-6 shadow-2xl max-h-[85vh] overflow-y-auto animate-slide-up">
+        <div className="fixed inset-0 bg-black/30 backdrop-blur-sm z-[60] flex items-end sm:items-center justify-center animate-fade-in" onClick={() => setShowEditModal(false)}>
+          <div className="bg-surface w-full max-w-md rounded-t-2xl sm:rounded-2xl p-6 pb-8 shadow-2xl max-h-[90vh] overflow-y-auto animate-slide-up" onClick={(e) => e.stopPropagation()}>
             <div className="flex justify-between items-center mb-5">
               <h3 className="font-headline font-bold text-lg">Edit Profile</h3>
               <button onClick={() => setShowEditModal(false)} className="text-on-surface-variant hover:text-on-surface btn-press p-1 rounded-full">
@@ -232,7 +232,7 @@ export default function Profile() {
             </div>
 
             <button onClick={handleSaveProfile} disabled={saving}
-              className="w-full mt-5 bg-primary text-white font-bold py-3 rounded-full shadow-sm shadow-primary/15 btn-press disabled:opacity-50 flex items-center justify-center gap-2 text-sm">
+              className="w-full mt-5 mb-2 bg-primary text-white font-bold py-3.5 rounded-full shadow-sm shadow-primary/15 btn-press disabled:opacity-50 flex items-center justify-center gap-2 text-sm">
               {saving ? (
                 <><span className="material-symbols-outlined animate-spin text-base">progress_activity</span> Saving...</>
               ) : 'Save Changes'}
