@@ -195,7 +195,7 @@ export default function RideMatches() {
                             isBestMatch ? 'opacity-70' : 'text-on-secondary-container/60'
                           }`}
                         >
-                          YOUR FARE
+                          PER PERSON
                         </span>
                         <div
                           className={`text-2xl font-headline font-bold ${
@@ -204,6 +204,15 @@ export default function RideMatches() {
                         >
                           Rs. {ride.passengerFare}
                         </div>
+                        {seatsNeeded > 1 && (
+                          <span
+                            className={`text-[10px] font-semibold ${
+                              isBestMatch ? 'opacity-60' : 'text-on-secondary-container/50'
+                            }`}
+                          >
+                            Total: Rs. {ride.passengerFare * seatsNeeded} ({seatsNeeded} seats)
+                          </span>
+                        )}
                       </div>
                     </div>
 
@@ -317,7 +326,7 @@ export default function RideMatches() {
                         ) : (
                           <>
                             <span className="material-symbols-outlined">hail</span>
-                            Request Ride · Rs. {ride.passengerFare}
+                            Request Ride · Rs. {ride.passengerFare}/person
                           </>
                         )}
                       </button>

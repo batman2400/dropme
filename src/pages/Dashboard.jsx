@@ -195,7 +195,7 @@ export default function Dashboard() {
                         </span>
                         {ride.price_per_seat && (
                           <span className="text-[10px] font-bold text-primary bg-primary/8 px-2.5 py-1 rounded-full">
-                            Rs. {ride.price_per_seat}/seat
+                            from Rs. {ride.price_per_seat}
                           </span>
                         )}
                       </div>
