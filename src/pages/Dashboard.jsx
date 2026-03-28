@@ -1,11 +1,14 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import BottomNavBar from '../components/BottomNavBar';
 import { useAuth } from '../contexts/AuthContext';
+import { useNotifications } from '../contexts/NotificationContext';
 import { supabase } from '../supabaseClient';
 
 export default function Dashboard() {
   const { profile } = useAuth();
+  const { unreadCount, markAllRead, activeRideIds } = useNotifications();
+  const navigate = useNavigate();
   const [rides, setRides] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -59,6 +62,15 @@ export default function Dashboard() {
     car: 'directions_car',
   };
 
+  const handleNotificationClick = () => {
+    markAllRead();
+    if (activeRideIds.length > 0) {
+      navigate(`/active-ride/${activeRideIds[0]}`);
+    } else {
+      navigate('/activity');
+    }
+  };
+
   return (
     <div className="bg-surface text-on-surface font-body min-h-screen pb-24">
       {/* Top Bar */}
@@ -80,8 +92,20 @@ export default function Dashboard() {
             </h1>
           </div>
         </div>
-        <button className="w-9 h-9 flex items-center justify-center rounded-full bg-surface-container-low text-on-surface-variant/60 btn-press">
-          <span className="material-symbols-outlined text-[20px]">notifications</span>
+        <button
+          onClick={handleNotificationClick}
+          className="relative w-9 h-9 flex items-center justify-center rounded-full bg-surface-container-low text-on-surface-variant/60 btn-press"
+        >
+          <span className="material-symbols-outlined text-[20px]"
+            style={unreadCount > 0 ? { fontVariationSettings: "'FILL' 1" } : {}}
+          >
+            notifications
+          </span>
+          {unreadCount > 0 && (
+            <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] bg-error text-white text-[10px] font-bold rounded-full flex items-center justify-center px-1 animate-scale-in">
+              {unreadCount > 9 ? '9+' : unreadCount}
+            </span>
+          )}
         </button>
       </header>
 

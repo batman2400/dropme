@@ -185,6 +185,16 @@ body {
   will-change: transform, opacity;
 }
 
+/* Slide down (notification toasts) */
+@keyframes slideDown {
+  from { opacity: 0; transform: translate(-50%, -100%); }
+  to { opacity: 1; transform: translate(-50%, 0); }
+}
+.animate-slide-down {
+  animation: slideDown 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;
+  will-change: transform, opacity;
+}
+
 /* Floating */
 @keyframes float {
   0%, 100% { transform: translateY(0); }
