@@ -282,13 +282,13 @@ export default function FindRide() {
 
   // ─── RENDER ───────────────────────────────────────────────
   return (
-    <div className="bg-surface font-body text-on-surface min-h-screen pb-28">
+    <div className="bg-surface font-body text-on-surface min-h-screen pb-24">
       <TopNavBar showAvatar showNotification />
 
-      <main className="content-grid px-6 pt-8">
-        <section className="mb-10 animate-fade-up">
-          <div className="mb-8">
-            <h2 className="font-headline font-extrabold text-3xl sm:text-4xl text-on-surface leading-tight tracking-tight">
+      <main className="content-grid px-5 sm:px-6 pt-6">
+        <section className="animate-fade-up">
+          <div className="mb-6">
+            <h2 className="font-headline font-extrabold text-[1.65rem] sm:text-3xl text-on-surface leading-[1.15] tracking-tight">
               Where are you <br />
               <span className="text-primary">heading today?</span>
             </h2>
@@ -296,34 +296,34 @@ export default function FindRide() {
 
           {/* Error */}
           {error && (
-            <div className="mb-6 p-4 bg-error/10 text-error rounded-xl text-sm font-medium flex items-center gap-2">
-              <span className="material-symbols-outlined text-lg">error</span>
+            <div className="mb-5 p-3.5 bg-error/8 text-error rounded-xl text-sm font-medium flex items-center gap-2 border border-error/10">
+              <span className="material-symbols-outlined text-base">error</span>
               {error}
             </div>
           )}
 
-          <div className="grid grid-cols-1 gap-4 animate-fade-up stagger-2">
+          <div className="space-y-3 animate-fade-up stagger-2">
             {/* Location Inputs */}
-            <div className="bg-surface-container-low rounded-2xl p-5 sm:p-6 space-y-6">
-              <div className="relative flex items-start gap-4">
+            <div className="bg-surface-container-low rounded-2xl p-4 sm:p-5 border border-outline-variant/6">
+              <div className="relative flex items-start gap-3">
                 <div className="flex flex-col items-center pt-2">
                   <span
-                    className="material-symbols-outlined text-primary"
+                    className="material-symbols-outlined text-primary text-[18px]"
                     style={{ fontVariationSettings: "'FILL' 1" }}
                   >
                     radio_button_checked
                   </span>
-                  <div className="w-0.5 h-12 bg-outline-variant/30 my-1"></div>
+                  <div className="w-[1.5px] h-10 bg-outline-variant/25 my-0.5"></div>
                   <span
-                    className="material-symbols-outlined text-error"
+                    className="material-symbols-outlined text-error text-[18px]"
                     style={{ fontVariationSettings: "'FILL' 1" }}
                   >
                     location_on
                   </span>
                 </div>
-                <div className="flex-1 space-y-4">
+                <div className="flex-1 space-y-3">
                   <div className="space-y-1 relative">
-                    <label className="font-label text-[10px] font-semibold uppercase tracking-wider text-on-surface-variant/60 ml-1">
+                    <label className="font-label text-[9px] font-semibold uppercase tracking-wider text-on-surface-variant/50 ml-0.5">
                       Pickup Location
                     </label>
                     <Autocomplete
@@ -335,14 +335,14 @@ export default function FindRide() {
                       }}
                     >
                       <input
-                        className="w-full bg-surface-container-lowest ghost-border rounded-xl px-4 py-3 focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all placeholder:text-on-surface-variant/40"
+                        className="w-full bg-surface-container-lowest border border-outline-variant/10 rounded-xl px-3.5 py-2.5 text-sm placeholder:text-on-surface-variant/35"
                         placeholder="Enter starting point"
                         type="text"
                       />
                     </Autocomplete>
                   </div>
                   <div className="space-y-1 relative">
-                    <label className="font-label text-[10px] font-semibold uppercase tracking-wider text-on-surface-variant/60 ml-1">
+                    <label className="font-label text-[9px] font-semibold uppercase tracking-wider text-on-surface-variant/50 ml-0.5">
                       Drop-off Location
                     </label>
                     <Autocomplete
@@ -354,7 +354,7 @@ export default function FindRide() {
                       }}
                     >
                       <input
-                        className="w-full bg-surface-container-lowest ghost-border rounded-xl px-4 py-3 focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all placeholder:text-on-surface-variant/40"
+                        className="w-full bg-surface-container-lowest border border-outline-variant/10 rounded-xl px-3.5 py-2.5 text-sm placeholder:text-on-surface-variant/35"
                         placeholder="Enter destination"
                         type="text"
                       />
@@ -364,50 +364,45 @@ export default function FindRide() {
               </div>
             </div>
 
-            {/* Seats Needed + Search */}
-            <div className="space-y-4 animate-fade-up stagger-3">
-              <div className="bg-surface-container-low rounded-2xl p-5 sm:p-6 flex flex-col gap-5">
-                <div className="space-y-4">
-                  <div className="space-y-1">
-                    <label className="font-label text-[10px] font-semibold uppercase tracking-wider text-on-surface-variant/60 ml-1">
-                      Seats Needed
-                    </label>
-                    <div className="flex items-center justify-between bg-surface-container-lowest ghost-border rounded-xl px-4 py-3">
-                      <span className="font-medium">{seatsNeeded} Passenger{seatsNeeded > 1 && 's'}</span>
-                      <div className="flex gap-4">
-                        <button
-                          onClick={() => setSeatsNeeded(Math.max(1, seatsNeeded - 1))}
-                          className="w-6 h-6 flex items-center justify-center rounded-full bg-surface-container-high text-primary active:scale-90 transition-transform"
-                        >
-                          <span className="material-symbols-outlined text-sm">remove</span>
-                        </button>
-                        <button
-                          onClick={() => setSeatsNeeded(Math.min(4, seatsNeeded + 1))}
-                          className="w-6 h-6 flex items-center justify-center rounded-full bg-primary text-white active:scale-90 transition-transform"
-                        >
-                          <span className="material-symbols-outlined text-sm">add</span>
-                        </button>
-                      </div>
-                    </div>
+            {/* Seats + Search */}
+            <div className="bg-surface-container-low rounded-2xl p-4 sm:p-5 space-y-4 border border-outline-variant/6">
+              <div className="space-y-1">
+                <label className="font-label text-[9px] font-semibold uppercase tracking-wider text-on-surface-variant/50 ml-0.5">
+                  Seats Needed
+                </label>
+                <div className="flex items-center justify-between bg-surface-container-lowest border border-outline-variant/10 rounded-xl px-3.5 py-2.5">
+                  <span className="font-medium text-sm">{seatsNeeded} Passenger{seatsNeeded > 1 && 's'}</span>
+                  <div className="flex gap-3">
+                    <button
+                      onClick={() => setSeatsNeeded(Math.max(1, seatsNeeded - 1))}
+                      className="w-7 h-7 flex items-center justify-center rounded-full bg-surface-container-high text-primary active:scale-90 transition-transform"
+                    >
+                      <span className="material-symbols-outlined text-[16px]">remove</span>
+                    </button>
+                    <button
+                      onClick={() => setSeatsNeeded(Math.min(4, seatsNeeded + 1))}
+                      className="w-7 h-7 flex items-center justify-center rounded-full bg-primary text-white active:scale-90 transition-transform"
+                    >
+                      <span className="material-symbols-outlined text-[16px]">add</span>
+                    </button>
                   </div>
-
-                  {/* Search button */}
-                  <button
-                    onClick={handleSearch}
-                    disabled={isSearching || !pickup || !dropoff}
-                    className="w-full py-4 bg-gradient-to-r from-primary to-primary-container text-white font-headline font-bold rounded-full shadow-lg shadow-primary/20 btn-press disabled:opacity-50 flex justify-center items-center gap-2 animate-pulse-glow"
-                  >
-                    {isSearching ? (
-                      <>
-                        <span className="material-symbols-outlined animate-spin">progress_activity</span>
-                        <span className="text-sm">{searchProgress}</span>
-                      </>
-                    ) : (
-                      'Search Routes'
-                    )}
-                  </button>
                 </div>
               </div>
+
+              <button
+                onClick={handleSearch}
+                disabled={isSearching || !pickup || !dropoff}
+                className="w-full py-3.5 bg-gradient-to-r from-primary to-primary-container text-white font-headline font-bold text-[15px] rounded-full shadow-md shadow-primary/15 btn-press disabled:opacity-40 disabled:shadow-none flex justify-center items-center gap-2"
+              >
+                {isSearching ? (
+                  <>
+                    <span className="material-symbols-outlined animate-spin text-lg">progress_activity</span>
+                    <span className="text-sm">{searchProgress}</span>
+                  </>
+                ) : (
+                  'Search Routes'
+                )}
+              </button>
             </div>
           </div>
         </section>
@@ -417,3 +412,4 @@ export default function FindRide() {
     </div>
   );
 }
+

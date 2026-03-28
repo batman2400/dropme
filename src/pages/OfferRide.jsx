@@ -236,43 +236,43 @@ export default function OfferRide() {
 
   // ─── RENDER ───────────────────────────────────────────────
   return (
-    <div className="bg-surface font-body text-on-surface min-h-screen pb-28">
+    <div className="bg-surface font-body text-on-surface min-h-screen pb-24">
       <TopNavBar showAvatar showNotification />
 
-      <main className="px-6 mt-4 content-grid">
+      <main className="px-5 sm:px-6 mt-3 content-grid">
         {/* Header */}
-        <section className="mb-8 animate-fade-up">
-          <span className="font-label text-[10px] font-semibold uppercase tracking-wider text-primary mb-2 block">
+        <section className="mb-6 animate-fade-up">
+          <span className="font-label text-[9px] font-semibold uppercase tracking-wider text-primary mb-1 block">
             Driver Console
           </span>
-          <h2 className="font-headline text-3xl font-extrabold tracking-tight leading-none mb-4">
+          <h2 className="font-headline text-[1.65rem] sm:text-3xl font-extrabold tracking-tight leading-[1.15] mb-3">
             Share your journey,
             <br />
             <span className="text-primary-container">share the cost.</span>
           </h2>
         </section>
 
-        {/* Error banner */}
+        {/* Error */}
         {error && (
-          <div className="mb-6 p-4 bg-error/10 text-error rounded-xl text-sm font-medium flex items-center gap-2">
-            <span className="material-symbols-outlined text-lg">error</span>
+          <div className="mb-5 p-3.5 bg-error/6 text-error border border-error/10 rounded-xl text-sm font-medium flex items-center gap-2">
+            <span className="material-symbols-outlined text-base">error</span>
             {error}
           </div>
         )}
 
-        {/* ── Form ── */}
-        <section className="space-y-6">
-          {/* Location inputs with connecting dashed line */}
-          <div className="bg-surface-container-low rounded-xl p-6 relative overflow-hidden">
-            <div className="absolute left-6 top-[3.75rem] bottom-[3.75rem] w-px border-l-2 border-dashed border-outline-variant/30"></div>
-            <div className="space-y-8">
+        {/* Form */}
+        <section className="space-y-3">
+          {/* Location inputs */}
+          <div className="bg-surface-container-low rounded-2xl p-4 sm:p-5 relative overflow-hidden border border-outline-variant/6">
+            <div className="absolute left-[1.85rem] top-14 bottom-14 w-px border-l-2 border-dashed border-outline-variant/20"></div>
+            <div className="space-y-6">
               {/* Starting Point */}
-              <div className="flex gap-4 items-start relative z-10">
+              <div className="flex gap-3 items-start relative z-10">
                 <div className="mt-1 w-6 h-6 rounded-full bg-white flex items-center justify-center shadow-sm shrink-0">
-                  <span className="material-symbols-outlined text-primary text-sm">my_location</span>
+                  <span className="material-symbols-outlined text-primary text-[14px]">my_location</span>
                 </div>
                 <div className="flex-1 w-full relative">
-                  <label className="block text-[10px] font-bold uppercase tracking-widest text-on-surface-variant mb-1">
+                  <label className="block text-[9px] font-bold uppercase tracking-widest text-on-surface-variant/50 mb-1">
                     Pick-up Location
                   </label>
                   <Autocomplete
@@ -284,7 +284,7 @@ export default function OfferRide() {
                     }}
                   >
                     <input
-                      className="w-full bg-surface-container-lowest border-none rounded-lg py-3 px-4 focus:ring-2 focus:ring-primary text-body text-sm placeholder:text-outline shadow-sm"
+                      className="w-full bg-surface-container-lowest border border-outline-variant/10 rounded-xl py-2.5 px-3.5 text-sm placeholder:text-on-surface-variant/35"
                       placeholder="Where are you starting from?"
                       type="text"
                     />
@@ -292,12 +292,12 @@ export default function OfferRide() {
                 </div>
               </div>
               {/* End Point */}
-              <div className="flex gap-4 items-start relative z-10">
+              <div className="flex gap-3 items-start relative z-10">
                 <div className="mt-1 w-6 h-6 rounded-full bg-primary flex items-center justify-center shadow-sm shrink-0">
-                  <span className="material-symbols-outlined text-white text-sm">location_on</span>
+                  <span className="material-symbols-outlined text-white text-[14px]">location_on</span>
                 </div>
                 <div className="flex-1 w-full relative">
-                  <label className="block text-[10px] font-bold uppercase tracking-widest text-on-surface-variant mb-1">
+                  <label className="block text-[9px] font-bold uppercase tracking-widest text-on-surface-variant/50 mb-1">
                     Destination
                   </label>
                   <Autocomplete
@@ -309,7 +309,7 @@ export default function OfferRide() {
                     }}
                   >
                     <input
-                      className="w-full bg-surface-container-lowest border-none rounded-lg py-3 px-4 focus:ring-2 focus:ring-primary text-body text-sm placeholder:text-outline shadow-sm"
+                      className="w-full bg-surface-container-lowest border border-outline-variant/10 rounded-xl py-2.5 px-3.5 text-sm placeholder:text-on-surface-variant/35"
                       placeholder="Where are you heading?"
                       type="text"
                     />
@@ -319,51 +319,45 @@ export default function OfferRide() {
             </div>
           </div>
 
-          {/* Time + Vehicle Info row */}
-          <div className="grid grid-cols-2 gap-3 animate-fade-up stagger-3">
-            {/* Departure Time */}
-            <div className="bg-surface-container-low rounded-xl p-5">
-              <div className="flex items-center gap-2 mb-3">
-                <span className="material-symbols-outlined text-primary text-lg">schedule</span>
-                <label className="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">
-                  Time
-                </label>
+          {/* Time + Vehicle */}
+          <div className="grid grid-cols-2 gap-2.5 animate-fade-up stagger-3">
+            <div className="bg-surface-container-low rounded-xl p-4 border border-outline-variant/6">
+              <div className="flex items-center gap-1.5 mb-2">
+                <span className="material-symbols-outlined text-primary text-base">schedule</span>
+                <label className="text-[9px] font-bold uppercase tracking-widest text-on-surface-variant/50">Time</label>
               </div>
               <input
-                className="w-full bg-surface-container-lowest border-none rounded-lg py-2 px-3 text-body text-sm font-semibold focus:ring-primary shadow-sm"
+                className="w-full bg-surface-container-lowest border border-outline-variant/10 rounded-xl py-2 px-3 text-sm font-semibold"
                 type="time"
                 value={departureTime}
                 onChange={(e) => setDepartureTime(e.target.value)}
               />
             </div>
-            {/* Vehicle + Seats (auto-set from profile, read-only) */}
-            <div className="bg-surface-container-low rounded-xl p-5">
-              <div className="flex items-center gap-2 mb-3">
-                <span className="material-symbols-outlined text-primary text-lg">{vehicleIcon}</span>
-                <label className="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">
-                  Vehicle
-                </label>
+            <div className="bg-surface-container-low rounded-xl p-4 border border-outline-variant/6">
+              <div className="flex items-center gap-1.5 mb-2">
+                <span className="material-symbols-outlined text-primary text-base">{vehicleIcon}</span>
+                <label className="text-[9px] font-bold uppercase tracking-widest text-on-surface-variant/50">Vehicle</label>
               </div>
-              <div className="bg-surface-container-lowest rounded-lg py-2 px-3 text-sm font-semibold">
+              <div className="bg-surface-container-lowest border border-outline-variant/10 rounded-xl py-2 px-3 text-sm font-semibold">
                 {profileReady ? (
                   <span>{vehicleLabel} · {availableSeats} seat{availableSeats > 1 ? 's' : ''}</span>
                 ) : (
-                  <span className="text-outline">Loading...</span>
+                  <span className="text-on-surface-variant/40">Loading...</span>
                 )}
               </div>
             </div>
           </div>
 
-          {/* Route Preview Card (Dynamic Pricing) */}
-          <div className="bg-surface-container-high rounded-2xl p-4 flex gap-4 overflow-hidden min-h-[130px] relative animate-fade-up stagger-4">
+          {/* Pricing Preview */}
+          <div className="bg-surface-container-high rounded-2xl p-4 flex gap-3 overflow-hidden min-h-[110px] relative animate-fade-up stagger-4 border border-outline-variant/6">
             <div className="flex-1 py-1 z-10">
-              <p className="font-headline font-bold text-lg mb-1">Estimated Earnings</p>
-              <p className="text-xs text-on-surface-variant mb-4 leading-relaxed">
+              <p className="font-headline font-bold text-base mb-1">Estimated Earnings</p>
+              <p className="text-[11px] text-on-surface-variant/60 mb-3 leading-relaxed">
                 {distanceKm > 0
                   ? `${distanceKm.toFixed(1)} km · ${Math.round(durationMin)} min drive`
                   : 'Enter route to see estimated earnings.'}
               </p>
-              <div className="inline-flex items-center gap-2 bg-primary px-3 py-1.5 rounded-full transition-all">
+              <div className="inline-flex items-center gap-1.5 bg-primary px-2.5 py-1 rounded-full">
                 {isCalculating ? (
                   <span className="material-symbols-outlined animate-spin text-white/60 text-sm">progress_activity</span>
                 ) : (
@@ -371,36 +365,36 @@ export default function OfferRide() {
                     <span className="text-white font-headline font-bold text-sm">
                       Rs. {calculatedFare > 0 ? calculatedFare : '---'}
                     </span>
-                    <span className="text-white/60 text-[10px] font-bold">PER SEAT</span>
+                    <span className="text-white/50 text-[9px] font-bold">PER SEAT</span>
                   </>
                 )}
               </div>
             </div>
-            <div className="absolute right-0 top-0 bottom-0 w-32 bg-primary-fixed overflow-hidden z-0">
-              <div className="w-full h-full flex items-center justify-center opacity-20">
-                <span className="material-symbols-outlined text-7xl text-primary">route</span>
+            <div className="absolute right-0 top-0 bottom-0 w-28 bg-primary-fixed overflow-hidden z-0">
+              <div className="w-full h-full flex items-center justify-center opacity-15">
+                <span className="material-symbols-outlined text-6xl text-primary">route</span>
               </div>
               <div className="absolute inset-0 bg-gradient-to-l from-transparent to-surface-container-high"></div>
             </div>
           </div>
         </section>
 
-        {/* Publish Button */}
-        <section className="mt-8">
+        {/* Publish */}
+        <section className="mt-6">
           <button
             onClick={handlePublish}
             disabled={isPublishing || !pickup || !dropoff || !departureTime || !profileReady || calculatedFare === 0}
-            className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-primary to-primary-container text-white py-4 sm:py-5 rounded-full font-headline font-extrabold text-lg tracking-tight shadow-lg shadow-primary/20 btn-press disabled:opacity-50 animate-pulse-glow"
+            className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-primary to-primary-container text-white py-3.5 rounded-full font-headline font-bold text-[15px] tracking-tight shadow-md shadow-primary/15 btn-press disabled:opacity-40 disabled:shadow-none"
           >
             {isPublishing ? (
-              <span className="material-symbols-outlined animate-spin">progress_activity</span>
+              <span className="material-symbols-outlined animate-spin text-lg">progress_activity</span>
             ) : (
               'Publish Route'
             )}
           </button>
-          <p className="text-center text-[10px] text-on-surface-variant mt-4 font-medium uppercase tracking-[0.1em]">
+          <p className="text-center text-[9px] text-on-surface-variant/50 mt-3 font-medium uppercase tracking-[0.08em]">
             By publishing, you agree to the{' '}
-            <span className="text-primary border-b border-primary/20">pooler pledge</span>
+            <span className="text-primary border-b border-primary/15">pooler pledge</span>
           </p>
         </section>
       </main>
@@ -409,3 +403,4 @@ export default function OfferRide() {
     </div>
   );
 }
+

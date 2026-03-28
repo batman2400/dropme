@@ -105,7 +105,7 @@ export default function OnboardingSuccess() {
                 </svg>
               </div>
               <input
-                className="w-full bg-surface-container-lowest pl-12 pr-4 py-4 rounded-xl border border-outline-variant/20 text-on-surface placeholder:text-on-surface-variant/40 font-medium"
+                className="w-full bg-surface-container-lowest pl-12 pr-4 py-3.5 rounded-xl border border-outline-variant/10 text-on-surface placeholder:text-on-surface-variant/35 font-medium text-sm"
                 placeholder="+94 7X XXX XXXX"
                 type="tel"
                 value={phone}
@@ -125,7 +125,7 @@ export default function OnboardingSuccess() {
             <button
               onClick={handleGoToDashboard}
               disabled={loading}
-              className="w-full bg-gradient-to-r from-primary to-primary-container text-white font-headline font-bold py-4 sm:py-5 rounded-full shadow-lg shadow-primary/20 btn-press flex items-center justify-center gap-3 disabled:opacity-50"
+              className="w-full bg-gradient-to-r from-primary to-primary-container text-white font-headline font-bold py-3.5 rounded-full shadow-md shadow-primary/15 btn-press flex items-center justify-center gap-3 disabled:opacity-50"
             >
               {loading ? (
                 <>

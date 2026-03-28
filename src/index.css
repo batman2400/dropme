@@ -1,19 +1,19 @@
 @import "tailwindcss";
 
 /* ============================================
-   dropme. Design System — Tailwind v4 Theme
+   dropme. Design System v2 — Tailwind v4
    Premium Mobile-First Ride Pooling UI
    ============================================ */
 
 @theme {
-  /* ── Font Families ── */
-  --font-headline: "Manrope", sans-serif;
-  --font-body: "Inter", sans-serif;
-  --font-label: "Inter", sans-serif;
+  /* ── Typography ── */
+  --font-headline: "Manrope", system-ui, sans-serif;
+  --font-body: "Inter", system-ui, sans-serif;
+  --font-label: "Inter", system-ui, sans-serif;
 
-  /* ── Primary ── */
-  --color-primary: #004ac6;
-  --color-primary-container: #2563eb;
+  /* ── Primary — Deep Sapphire Blue ── */
+  --color-primary: #1a3fc7;
+  --color-primary-container: #3b5ee8;
   --color-primary-fixed: #dbe1ff;
   --color-primary-fixed-dim: #b4c5ff;
   --color-on-primary: #ffffff;
@@ -22,7 +22,7 @@
   --color-on-primary-fixed-variant: #003ea8;
   --color-inverse-primary: #b4c5ff;
 
-  /* ── Secondary ── */
+  /* ── Secondary — Muted Indigo ── */
   --color-secondary: #495c95;
   --color-secondary-container: #acbfff;
   --color-secondary-fixed: #dbe1ff;
@@ -32,9 +32,9 @@
   --color-on-secondary-fixed: #00174b;
   --color-on-secondary-fixed-variant: #31447b;
 
-  /* ── Tertiary ── */
-  --color-tertiary: #006242;
-  --color-tertiary-container: #007d55;
+  /* ── Tertiary — Viridian Green ── */
+  --color-tertiary: #0d7a52;
+  --color-tertiary-container: #11945f;
   --color-tertiary-fixed: #6ffbbe;
   --color-tertiary-fixed-dim: #4edea3;
   --color-on-tertiary: #ffffff;
@@ -42,33 +42,33 @@
   --color-on-tertiary-fixed: #002113;
   --color-on-tertiary-fixed-variant: #005236;
 
-  /* ── Error ── */
-  --color-error: #ba1a1a;
+  /* ── Error — Crimson ── */
+  --color-error: #c62828;
   --color-error-container: #ffdad6;
   --color-on-error: #ffffff;
   --color-on-error-container: #93000a;
 
   /* ── Surface & Background ── */
-  --color-surface: #f8f9ff;
-  --color-surface-dim: #cbdbf5;
-  --color-surface-bright: #f8f9ff;
-  --color-surface-variant: #d3e4fe;
-  --color-surface-tint: #0053db;
-  --color-surface-container: #e5eeff;
-  --color-surface-container-low: #eff4ff;
+  --color-surface: #f6f8ff;
+  --color-surface-dim: #c8d9f2;
+  --color-surface-bright: #f6f8ff;
+  --color-surface-variant: #d0e1fd;
+  --color-surface-tint: #2347d4;
+  --color-surface-container: #e8f0ff;
+  --color-surface-container-low: #f0f5ff;
   --color-surface-container-lowest: #ffffff;
-  --color-surface-container-high: #dce9ff;
-  --color-surface-container-highest: #d3e4fe;
-  --color-background: #f8f9ff;
-  --color-on-surface: #0b1c30;
-  --color-on-surface-variant: #434655;
-  --color-on-background: #0b1c30;
-  --color-inverse-surface: #213145;
-  --color-inverse-on-surface: #eaf1ff;
+  --color-surface-container-high: #dae6fc;
+  --color-surface-container-highest: #d0e1fd;
+  --color-background: #f6f8ff;
+  --color-on-surface: #0a1929;
+  --color-on-surface-variant: #3d4555;
+  --color-on-background: #0a1929;
+  --color-inverse-surface: #1c2d42;
+  --color-inverse-on-surface: #e8efff;
 
   /* ── Outline ── */
-  --color-outline: #737686;
-  --color-outline-variant: #c3c6d7;
+  --color-outline: #6a7085;
+  --color-outline-variant: #bcc2d4;
 
   /* ── Border Radius ── */
   --radius: 0.25rem;
@@ -85,11 +85,13 @@
   -webkit-tap-highlight-color: transparent;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  box-sizing: border-box;
 }
 
 html {
   scroll-behavior: smooth;
   -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
 }
 
 body {
@@ -97,9 +99,14 @@ body {
   overflow-x: hidden;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
+  background-color: #f6f8ff;
 }
 
-
+/* Smooth selection color */
+::selection {
+  background: rgba(26, 63, 199, 0.15);
+  color: #0a1929;
+}
 
 /* ============================================
    TYPOGRAPHY
@@ -113,42 +120,39 @@ body {
    ============================================ */
 .material-symbols-outlined {
   font-variation-settings: "FILL" 0, "wght" 300, "GRAD" 0, "opsz" 24;
+  font-size: inherit;
+  line-height: 1;
 }
 
 /* ============================================
-   GLASSMORPHISM UTILITIES
+   GLASSMORPHISM
    ============================================ */
 .glass-nav {
-  background: rgba(239, 244, 255, 0.82);
-  backdrop-filter: blur(20px) saturate(180%);
-  -webkit-backdrop-filter: blur(20px) saturate(180%);
-  border-top: 1px solid rgba(255, 255, 255, 0.5);
+  background: rgba(246, 248, 255, 0.85);
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  border-top: 1px solid rgba(255, 255, 255, 0.6);
+  box-shadow: 0 -1px 20px rgba(10, 25, 41, 0.04);
 }
 
 .glass-card {
-  background: rgba(255, 255, 255, 0.6);
+  background: rgba(255, 255, 255, 0.65);
   backdrop-filter: blur(16px) saturate(150%);
   -webkit-backdrop-filter: blur(16px) saturate(150%);
-  border: 1px solid rgba(255, 255, 255, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.45);
 }
 
 /* ============================================
-   ANIMATIONS — GPU-accelerated via will-change
+   ANIMATIONS — GPU-accelerated
    ============================================ */
 
 /* Fade up entrance */
 @keyframes fadeUp {
-  from {
-    opacity: 0;
-    transform: translateY(16px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 .animate-fade-up {
-  animation: fadeUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation: fadeUp 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
   will-change: transform, opacity;
 }
 
@@ -161,113 +165,109 @@ body {
   animation: fadeIn 0.4s ease both;
 }
 
-/* Scale in (for cards) */
+/* Scale in (cards) */
 @keyframes scaleIn {
-  from {
-    opacity: 0;
-    transform: scale(0.95);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1);
-  }
+  from { opacity: 0; transform: scale(0.96); }
+  to { opacity: 1; transform: scale(1); }
 }
 .animate-scale-in {
-  animation: scaleIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation: scaleIn 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;
   will-change: transform, opacity;
 }
 
-/* Slide up (for modals) */
+/* Slide up (modals / bottom sheets) */
 @keyframes slideUp {
-  from {
-    opacity: 0;
-    transform: translateY(100%);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  from { opacity: 0; transform: translateY(100%); }
+  to { opacity: 1; transform: translateY(0); }
 }
 .animate-slide-up {
-  animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation: slideUp 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
   will-change: transform, opacity;
 }
 
-/* Floating element */
+/* Floating */
 @keyframes float {
   0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-10px); }
+  50% { transform: translateY(-8px); }
 }
 .floating-element {
-  animation: float 6s ease-in-out infinite;
+  animation: float 5s ease-in-out infinite;
 }
 
-/* Pulse glow (for CTA buttons) */
+/* Pulse glow (CTA) */
 @keyframes pulseGlow {
-  0%, 100% { box-shadow: 0 8px 24px rgba(0, 74, 198, 0.25); }
-  50% { box-shadow: 0 12px 36px rgba(0, 74, 198, 0.4); }
+  0%, 100% { box-shadow: 0 6px 20px rgba(26, 63, 199, 0.25); }
+  50% { box-shadow: 0 10px 30px rgba(26, 63, 199, 0.4); }
 }
 .animate-pulse-glow {
   animation: pulseGlow 2.5s ease-in-out infinite;
 }
 
-/* Shimmer loading skeleton */
+/* Shimmer skeleton */
 @keyframes shimmer {
   from { background-position: -200% 0; }
   to { background-position: 200% 0; }
 }
 .skeleton {
-  background: linear-gradient(90deg, #e5eeff 25%, #dce9ff 50%, #e5eeff 75%);
+  background: linear-gradient(90deg, #e8f0ff 25%, #dae6fc 50%, #e8f0ff 75%);
   background-size: 200% 100%;
   animation: shimmer 1.5s infinite;
   border-radius: 0.75rem;
 }
 
-/* Stagger delays for lists */
-.stagger-1 { animation-delay: 0.05s; }
-.stagger-2 { animation-delay: 0.1s; }
-.stagger-3 { animation-delay: 0.15s; }
-.stagger-4 { animation-delay: 0.2s; }
-.stagger-5 { animation-delay: 0.25s; }
+/* Stagger delays */
+.stagger-1 { animation-delay: 0.06s; }
+.stagger-2 { animation-delay: 0.12s; }
+.stagger-3 { animation-delay: 0.18s; }
+.stagger-4 { animation-delay: 0.24s; }
+.stagger-5 { animation-delay: 0.30s; }
 
 /* ============================================
-   INTERACTIVE STATES & MICRO-INTERACTIONS
+   INTERACTIVE STATES
    ============================================ */
 .interactive-card {
-  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1),
-              box-shadow 0.2s ease;
+  transition: transform 0.25s cubic-bezier(0.22, 1, 0.36, 1),
+              box-shadow 0.25s ease;
 }
 .interactive-card:active {
-  transform: scale(0.97);
+  transform: scale(0.98);
 }
 @media (hover: hover) {
   .interactive-card:hover {
     transform: translateY(-2px);
-    box-shadow: 0 12px 32px rgba(11, 28, 48, 0.1);
+    box-shadow: 0 8px 28px rgba(10, 25, 41, 0.08);
   }
 }
 
-/* Button press effect */
+/* Button press */
 .btn-press {
-  transition: transform 0.15s cubic-bezier(0.16, 1, 0.3, 1),
+  transition: transform 0.15s cubic-bezier(0.22, 1, 0.36, 1),
               box-shadow 0.15s ease,
               opacity 0.15s ease;
 }
 .btn-press:active {
-  transform: scale(0.96);
+  transform: scale(0.97);
 }
 
 /* ============================================
-   FORM INPUT STYLING
+   FORM STYLING — Polished inputs
    ============================================ */
 input, select, textarea {
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  font-family: "Inter", system-ui, sans-serif;
 }
 
 input:focus, select:focus, textarea:focus {
   outline: none !important;
-  border-color: #004ac6 !important;
-  box-shadow: 0 0 0 3px rgba(0, 74, 198, 0.12);
+  border-color: #1a3fc7 !important;
+  box-shadow: 0 0 0 3px rgba(26, 63, 199, 0.1), 0 1px 2px rgba(26, 63, 199, 0.08);
+}
+
+/* Remove number spinner */
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
 }
 
 /* ============================================
@@ -279,25 +279,25 @@ input:focus, select:focus, textarea:focus {
 
 .role-toggle-active {
   background: white;
-  color: #004ac6;
-  box-shadow: 0 4px 12px rgba(11, 28, 48, 0.08);
+  color: #1a3fc7;
+  box-shadow: 0 2px 8px rgba(10, 25, 41, 0.06), 0 1px 2px rgba(10, 25, 41, 0.04);
 }
 
 .ghost-border {
-  border: 1px solid rgba(195, 198, 215, 0.2);
+  border: 1px solid rgba(188, 194, 212, 0.15);
 }
 
 /* Scrollbar hiding */
 .hide-scrollbar::-webkit-scrollbar { display: none; }
 .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
-/* Boarding pass clip path */
+/* Boarding pass clip */
 .boarding-pass-clip {
   clip-path: polygon(0 0, 100% 0, 100% 65%, 98% 68%, 98% 72%, 100% 75%, 100% 100%, 0 100%, 0 75%, 2% 72%, 2% 68%, 0 65%);
 }
 
 /* ============================================
-   SAFE AREAS (notch/dynamic island)
+   SAFE AREAS (notch / dynamic island)
    ============================================ */
 .pb-safe {
   padding-bottom: max(0.5rem, env(safe-area-inset-bottom));
@@ -308,25 +308,38 @@ input:focus, select:focus, textarea:focus {
 }
 
 /* ============================================
-   RESPONSIVE LAYOUT UTILITIES
+   RESPONSIVE LAYOUT — Content Grid
    ============================================ */
 .content-grid {
-  --padding-inline: 1.5rem;
-  --max-width: 640px;
+  --padding-inline: 1.25rem;
+  --max-width: 540px;
   width: min(100% - var(--padding-inline) * 2, var(--max-width));
   margin-inline: auto;
 }
 
-@media (min-width: 768px) {
+@media (min-width: 640px) {
   .content-grid {
     --padding-inline: 2rem;
-    --max-width: 768px;
+    --max-width: 600px;
+  }
+}
+
+@media (min-width: 768px) {
+  .content-grid {
+    --padding-inline: 2.5rem;
+    --max-width: 680px;
   }
 }
 
 @media (min-width: 1024px) {
   .content-grid {
-    --max-width: 1024px;
+    --max-width: 720px;
+  }
+}
+
+@media (min-width: 1280px) {
+  .content-grid {
+    --max-width: 780px;
   }
 }
 
@@ -334,5 +347,12 @@ input:focus, select:focus, textarea:focus {
    PAGE TRANSITIONS
    ============================================ */
 .page-enter {
-  animation: fadeUp 0.35s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation: fadeUp 0.35s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* ============================================
+   RESPONSIVE TYPOGRAPHY
+   ============================================ */
+@media (max-width: 374px) {
+  html { font-size: 14px; }
 }

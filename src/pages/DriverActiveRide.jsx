@@ -298,36 +298,36 @@ export default function DriverActiveRide() {
 
   // ─── RENDER ───────────────────────────────────────────────
   return (
-    <div className="bg-surface font-body text-on-surface min-h-screen pb-28">
+    <div className="bg-surface font-body text-on-surface min-h-screen pb-24">
       <TopNavBar showAvatar showNotification />
 
-      <main className="px-6 pt-4 content-grid">
+      <main className="px-5 sm:px-6 pt-3 content-grid">
         {/* ── Ride Header ── */}
-        <section className="mb-6 animate-fade-up">
-          <span className="font-label text-[10px] font-semibold uppercase tracking-wider text-primary mb-2 block">
+        <section className="mb-5 animate-fade-up">
+          <span className="font-label text-[9px] font-semibold uppercase tracking-wider text-primary mb-1 block">
             {isInProgress ? '🚗 Ride in Progress' : '📡 Live — Waiting for Passengers'}
           </span>
-          <h2 className="font-headline text-2xl font-extrabold tracking-tight leading-tight mb-3">
+          <h2 className="font-headline text-[1.5rem] sm:text-2xl font-extrabold tracking-tight leading-[1.15] mb-2.5">
             {ride.start_address?.split(',')[0]}
-            <span className="text-primary/40 font-normal text-lg"> → </span>
+            <span className="text-primary/30 font-normal text-base"> → </span>
             {ride.end_address?.split(',')[0]}
           </h2>
 
           {/* Ride stats strip */}
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2.5 py-1 rounded-full bg-primary/10 text-primary">
-              <span className="material-symbols-outlined text-xs">{vehicleIcon}</span>
+          <div className="flex flex-wrap items-center gap-1.5">
+            <span className="inline-flex items-center gap-1 text-[9px] font-bold px-2 py-0.5 rounded-full bg-primary/6 text-primary">
+              <span className="material-symbols-outlined text-[11px]">{vehicleIcon}</span>
               {vehicleLabel}
             </span>
-            <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2.5 py-1 rounded-full bg-primary/10 text-primary">
-              <span className="material-symbols-outlined text-xs">schedule</span>
+            <span className="inline-flex items-center gap-1 text-[9px] font-bold px-2 py-0.5 rounded-full bg-primary/6 text-primary">
+              <span className="material-symbols-outlined text-[11px]">schedule</span>
               {departureTime}
             </span>
-            <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2.5 py-1 rounded-full bg-tertiary/10 text-tertiary">
-              <span className="material-symbols-outlined text-xs">event_seat</span>
+            <span className="inline-flex items-center gap-1 text-[9px] font-bold px-2 py-0.5 rounded-full bg-tertiary/6 text-tertiary">
+              <span className="material-symbols-outlined text-[11px]">event_seat</span>
               {ride.available_seats} seat{ride.available_seats !== 1 ? 's' : ''} left
             </span>
-            <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2.5 py-1 rounded-full bg-primary/10 text-primary">
+            <span className="inline-flex items-center gap-1 text-[9px] font-bold px-2 py-0.5 rounded-full bg-primary/6 text-primary">
               Rs. {ride.price_per_seat}/seat
             </span>
           </div>
@@ -335,8 +335,8 @@ export default function DriverActiveRide() {
 
         {/* Error */}
         {error && (
-          <div className="mb-4 p-4 bg-error/10 text-error rounded-xl text-sm font-medium flex items-center gap-2">
-            <span className="material-symbols-outlined text-lg">error</span>
+          <div className="mb-4 p-3.5 bg-error/6 text-error border border-error/10 rounded-xl text-sm font-medium flex items-center gap-2">
+            <span className="material-symbols-outlined text-base">error</span>
             {error}
           </div>
         )}
@@ -486,10 +486,10 @@ function RequestCard({ request, type, isProcessing, onAccept, onReject }) {
   const dropoffShort = request.dropoff_address?.split(',')[0] || 'Dropoff';
 
   return (
-    <div className={`bg-surface-container-lowest rounded-2xl overflow-hidden shadow-sm ${
-      type === 'pending' ? 'border-l-4 border-amber-500' : 'border-l-4 border-tertiary'
+    <div className={`bg-surface-container-lowest rounded-xl overflow-hidden border border-outline-variant/6 ${
+      type === 'pending' ? 'border-l-[3px] border-l-amber-500' : 'border-l-[3px] border-l-tertiary'
     }`}>
-      <div className="p-5">
+      <div className="p-4">
         {/* Passenger info */}
         <div className="flex items-center gap-3 mb-4">
           {passengerAvatar ? (
