@@ -35,18 +35,12 @@ export default function OnboardingSuccess() {
     setLoading(true);
 
     if (user) {
-      const meta = user.user_metadata || {};
-      const { error } = await supabase.from('users').upsert(
-        {
-          user_id: user.id,
-          full_name: meta.full_name || meta.name || user.email?.split('@')[0] || 'New User',
-          phone_number: phone.trim(),
-          user_type: meta.user_type || 'passenger',
-          vehicle_type: meta.vehicle_type || null,
-          license_plate: meta.license_plate || null,
-        },
-        { onConflict: 'user_id' }
-      );
+      // Profile was auto-created by the signup trigger.
+      // We just need to update it with the phone number.
+      const { error } = await supabase
+        .from('profiles')
+        .update({ phone_number: phone.trim() })
+        .eq('id', user.id);
 
       if (error) {
         console.error('Profile creation error:', error.message);

@@ -12,8 +12,8 @@ export default function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [phone, setPhone] = useState('');
-  const [vehicleType, setVehicleType] = useState('Car');
-  const [licensePlate, setLicensePlate] = useState('');
+  const [vehicleType, setVehicleType] = useState('car');
+  const [vehiclePlate, setVehiclePlate] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -23,11 +23,11 @@ export default function Login() {
   useEffect(() => {
     const checkProfileAndRedirect = async () => {
       if (!authLoading && session) {
-        // Check if user has a profile in the users table
+        // Check if user has a profile in the profiles table
         const { data, error } = await supabase
-          .from('users')
+          .from('profiles')
           .select('id')
-          .eq('user_id', session.user.id)
+          .eq('id', session.user.id)
           .single();
 
         if (data && !error) {
@@ -84,9 +84,8 @@ export default function Login() {
       options: {
         data: {
           phone_number: phone,
-          user_type: role,
           vehicle_type: role === 'driver' ? vehicleType : null,
-          license_plate: role === 'driver' ? licensePlate : null,
+          vehicle_plate: role === 'driver' ? vehiclePlate : null,
         },
       },
     });
@@ -287,10 +286,9 @@ export default function Login() {
                           value={vehicleType}
                           onChange={(e) => setVehicleType(e.target.value)}
                         >
-                          <option>Car</option>
-                          <option>Three-Wheeler</option>
-                          <option>Bike</option>
-                          <option>Van</option>
+                          <option value="car">Car</option>
+                          <option value="tuk">Tuk-Tuk</option>
+                          <option value="bike">Bike</option>
                         </select>
                         <span className="absolute right-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-on-surface-variant pointer-events-none">
                           expand_more
@@ -299,14 +297,14 @@ export default function Login() {
                     </div>
                     <div className="space-y-2">
                       <label className="text-[10px] font-bold uppercase tracking-wider text-on-surface-variant/70 px-1">
-                        License Plate
+                        Vehicle Plate
                       </label>
                       <input
                         className="w-full bg-surface-container-lowest p-4 rounded-xl border border-outline-variant/10 text-sm font-bold uppercase placeholder:normal-case placeholder:font-medium placeholder:text-on-surface-variant/30"
                         placeholder="ABC-1234"
                         type="text"
-                        value={licensePlate}
-                        onChange={(e) => setLicensePlate(e.target.value)}
+                        value={vehiclePlate}
+                        onChange={(e) => setVehiclePlate(e.target.value)}
                       />
                     </div>
                   </div>

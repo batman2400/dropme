@@ -8,7 +8,8 @@ export function AuthProvider({ children }) {
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // Fetch the user's profile from the public `users` table
+  // Fetch the user's profile from the public `profiles` table
+  // In our new schema, profiles.id = auth.users.id (same UUID)
   const fetchProfile = useCallback(async (userId) => {
     if (!userId) {
       setProfile(null);
@@ -16,9 +17,9 @@ export function AuthProvider({ children }) {
     }
     try {
       const { data, error } = await supabase
-        .from('users')
+        .from('profiles')
         .select('*')
-        .eq('user_id', userId)
+        .eq('id', userId)
         .maybeSingle();
 
       if (error) {

@@ -22,16 +22,17 @@ export default function Dashboard() {
           .from('rides')
           .select(`
             id,
-            starting_point,
-            end_point,
+            start_address,
+            end_address,
             departure_time,
-            calculated_fare,
+            price_per_seat,
             vehicle_type,
             available_seats,
             status,
-            driver:users (
+            driver:profiles!rides_driver_id_fkey (
               full_name,
-              phone_number
+              avatar_url,
+              rating_avg
             )
           `)
           .eq('status', 'active')
@@ -51,15 +52,7 @@ export default function Dashboard() {
     fetchRides();
   }, []);
 
-  const handleWhatsAppClick = (phone, rideId) => {
-    if (!phone) return;
-    let formattedPhone = phone.replace(/\D/g, '');
-    if (formattedPhone.startsWith('0')) {
-      formattedPhone = '94' + formattedPhone.substring(1);
-    }
-    const text = encodeURIComponent(`Hi, I saw your ride (ID: ${rideId.substring(0,6).toUpperCase()}) on dropme. Are seats still available?`);
-    window.open(`https://wa.me/${formattedPhone}?text=${text}`, '_blank');
-  };
+
 
   return (
     <div className="bg-surface text-on-surface font-body min-h-screen pb-28">
@@ -160,10 +153,9 @@ export default function Dashboard() {
             ) : (
               rides.map((ride, index) => {
                 const driverName = ride.driver?.full_name || 'Anonymous Driver';
-                const driverPhone = ride.driver?.phone_number || '';
                 const rideTime = new Date(ride.departure_time).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
-                const startShort = ride.starting_point?.split(',')[0] || 'Unknown';
-                const endShort = ride.end_point?.split(',')[0] || 'Unknown';
+                const startShort = ride.start_address?.split(',')[0] || 'Unknown';
+                const endShort = ride.end_address?.split(',')[0] || 'Unknown';
 
                 return (
                   <div
@@ -201,19 +193,18 @@ export default function Dashboard() {
                         <span className="text-[10px] font-bold text-tertiary bg-tertiary/8 px-2.5 py-1 rounded-full">
                           {ride.available_seats} seat{ride.available_seats > 1 ? 's' : ''} left
                         </span>
-                        {ride.calculated_fare && (
+                        {ride.price_per_seat && (
                           <span className="text-[10px] font-bold text-primary bg-primary/8 px-2.5 py-1 rounded-full">
-                            Rs. {ride.calculated_fare}
+                            Rs. {ride.price_per_seat}/seat
                           </span>
                         )}
                       </div>
-                      <button
-                        onClick={() => handleWhatsAppClick(driverPhone, ride.id)}
-                        disabled={!driverPhone}
-                        className="bg-gradient-to-r from-primary to-primary-container text-white px-4 py-2 rounded-full text-[10px] font-bold font-label uppercase tracking-[0.12em] btn-press shadow-md shadow-primary/15 disabled:opacity-40"
+                      <Link
+                        to="/find-ride"
+                        className="bg-gradient-to-r from-primary to-primary-container text-white px-4 py-2 rounded-full text-[10px] font-bold font-label uppercase tracking-[0.12em] btn-press shadow-md shadow-primary/15"
                       >
-                        Join Ride
-                      </button>
+                        Find Ride
+                      </Link>
                     </div>
                   </div>
                 );

@@ -12,8 +12,7 @@ export default function Profile() {
   const [showEditModal, setShowEditModal] = useState(false);
   const [editPhone, setEditPhone] = useState('');
   const [editName, setEditName] = useState('');
-  const [editUserType, setEditUserType] = useState('passenger');
-  const [editVehicleType, setEditVehicleType] = useState('Car');
+  const [editVehicleType, setEditVehicleType] = useState('car');
   const [editLicensePlate, setEditLicensePlate] = useState('');
   const [saving, setSaving] = useState(false);
   const [switchingRole, setSwitchingRole] = useState(false);
@@ -21,15 +20,17 @@ export default function Profile() {
   useEffect(() => {
     if (!profile) return;
     const countRides = async () => {
-      if (profile.user_type === 'driver') {
+      if (profile.vehicle_type) {
+        // Driver: count rides offered
         const { count, error } = await supabase
           .from('rides')
           .select('id', { count: 'exact', head: true })
           .eq('driver_id', profile.id);
         if (!error) setRidesCount(count || 0);
       } else {
+        // Passenger: count ride requests made
         const { count, error } = await supabase
-          .from('requests')
+          .from('ride_requests')
           .select('id', { count: 'exact', head: true })
           .eq('passenger_id', profile.id);
         if (!error) setRidesCount(count || 0);
@@ -41,9 +42,8 @@ export default function Profile() {
   const handleOpenEdit = () => {
     setEditPhone(profile?.phone_number || '');
     setEditName(profile?.full_name || '');
-    setEditUserType(profile?.user_type || 'passenger');
-    setEditVehicleType(profile?.vehicle_type || 'Car');
-    setEditLicensePlate(profile?.license_plate || '');
+    setEditVehicleType(profile?.vehicle_type || '');
+    setEditLicensePlate(profile?.vehicle_plate || '');
     setShowEditModal(true);
   };
 
@@ -53,12 +53,11 @@ export default function Profile() {
       const updateData = {
         phone_number: editPhone,
         full_name: editName,
-        user_type: editUserType,
-        vehicle_type: editUserType === 'driver' ? editVehicleType : null,
-        license_plate: editUserType === 'driver' ? editLicensePlate : null,
+        vehicle_type: editVehicleType || null,
+        vehicle_plate: editLicensePlate || null,
       };
       const { error } = await supabase
-        .from('users')
+        .from('profiles')
         .update(updateData)
         .eq('id', profile.id);
       if (error) throw error;
@@ -72,32 +71,9 @@ export default function Profile() {
     }
   };
 
-  const handleQuickRoleSwitch = async () => {
-    const newRole = profile?.user_type === 'driver' ? 'passenger' : 'driver';
-    if (newRole === 'driver' && !profile?.vehicle_type) {
-      setEditPhone(profile?.phone_number || '');
-      setEditName(profile?.full_name || '');
-      setEditUserType('driver');
-      setEditVehicleType('Car');
-      setEditLicensePlate('');
-      setShowEditModal(true);
-      return;
-    }
-    setSwitchingRole(true);
-    try {
-      const { error } = await supabase
-        .from('users')
-        .update({ user_type: newRole })
-        .eq('id', profile.id);
-      if (error) throw error;
-      await refreshProfile();
-    } catch (err) {
-      console.error('Role switch error:', err);
-      alert('Failed to switch role.');
-    } finally {
-      setSwitchingRole(false);
-    }
-  };
+  // In the new schema, there is no user_type column.
+  // A user is a "driver" if they have vehicle_type set.
+  // We can toggle by clearing or setting vehicle_type.
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
@@ -105,7 +81,7 @@ export default function Profile() {
   };
 
   const displayName = profile?.full_name || 'New User';
-  const isDriver = profile?.user_type === 'driver';
+  const isDriver = !!profile?.vehicle_type;
 
   return (
     <div className="bg-surface text-on-surface font-body min-h-screen">
@@ -188,30 +164,25 @@ export default function Profile() {
             <div className="flex-1 min-w-0">
               <p className="text-[9px] font-bold uppercase tracking-[0.15em] text-on-surface-variant/60">Vehicle</p>
               <p className="font-semibold text-on-surface text-sm truncate">
-                {profile?.vehicle_type || 'Not registered'}{profile?.license_plate ? ` · ${profile.license_plate}` : ''}
+                {profile?.vehicle_type || 'Not registered'}{profile?.vehicle_plate ? ` · ${profile.vehicle_plate}` : ''}
               </p>
             </div>
             <span className="material-symbols-outlined text-on-surface-variant/30 text-lg">chevron_right</span>
           </button>
 
-          {/* Role Switch */}
-          <button onClick={handleQuickRoleSwitch} disabled={switchingRole} className="w-full bg-surface-container-lowest rounded-2xl p-4 flex items-center gap-4 border border-outline-variant/8 interactive-card text-left disabled:opacity-60">
+          {/* Account Type */}
+          <div className="w-full bg-surface-container-lowest rounded-2xl p-4 flex items-center gap-4 border border-outline-variant/8 interactive-card text-left">
             <div className="w-10 h-10 rounded-xl bg-secondary/8 flex items-center justify-center shrink-0">
-              <span className="material-symbols-outlined text-secondary text-xl">swap_horiz</span>
+              <span className="material-symbols-outlined text-secondary text-xl">{isDriver ? 'directions_car' : 'hail'}</span>
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-[9px] font-bold uppercase tracking-[0.15em] text-on-surface-variant/60">Account Type</p>
-              <p className="font-semibold text-on-surface text-sm capitalize">{profile?.user_type || 'Passenger'}</p>
-              <p className="text-[10px] text-primary font-semibold mt-0.5">
-                Tap to switch to {isDriver ? 'Passenger' : 'Driver'}
+              <p className="font-semibold text-on-surface text-sm capitalize">{isDriver ? 'Driver' : 'Passenger'}</p>
+              <p className="text-[10px] text-on-surface-variant font-semibold mt-0.5">
+                {isDriver ? 'Set vehicle details above' : 'Add vehicle details to become a driver'}
               </p>
             </div>
-            {switchingRole ? (
-              <span className="material-symbols-outlined text-primary animate-spin text-lg">progress_activity</span>
-            ) : (
-              <span className="material-symbols-outlined text-on-surface-variant/30 text-lg">chevron_right</span>
-            )}
-          </button>
+          </div>
         </section>
 
         {/* Log Out */}
@@ -246,31 +217,20 @@ export default function Profile() {
                   className="w-full px-4 py-3 rounded-xl bg-surface-container-low border border-outline-variant/15 font-medium text-sm" placeholder="+94 7X XXX XXXX" />
               </div>
               <div>
-                <label className="block text-[9px] font-bold uppercase tracking-[0.15em] text-on-surface-variant/60 mb-2">Account Type</label>
-                <div className="flex p-1 bg-surface-container-highest/50 rounded-full">
-                  <button
-                    className={`flex-1 py-2.5 rounded-full font-bold text-sm transition-all duration-300 ${editUserType === 'passenger' ? 'bg-primary text-white shadow-md' : 'text-on-surface-variant'}`}
-                    type="button" onClick={() => setEditUserType('passenger')}>
-                    Passenger
-                  </button>
-                  <button
-                    className={`flex-1 py-2.5 rounded-full font-bold text-sm transition-all duration-300 ${editUserType === 'driver' ? 'bg-primary text-white shadow-md' : 'text-on-surface-variant'}`}
-                    type="button" onClick={() => setEditUserType('driver')}>
-                    Driver
-                  </button>
-                </div>
+                <label className="block text-[9px] font-bold uppercase tracking-[0.15em] text-on-surface-variant/60 mb-2">Vehicle Type</label>
+                <select value={editVehicleType} onChange={(e) => setEditVehicleType(e.target.value)}
+                  className="w-full px-4 py-3 rounded-xl bg-surface-container-low border border-outline-variant/15 font-medium text-sm">
+                  <option value="">None (Passenger)</option>
+                  <option value="car">Car</option>
+                  <option value="tuk">Tuk-Tuk</option>
+                  <option value="bike">Bike</option>
+                </select>
+                <p className="text-[10px] text-on-surface-variant/50 mt-1">Select a vehicle to enable driver mode, or "None" for passenger only.</p>
               </div>
-              {editUserType === 'driver' && (
+              {editVehicleType && (
                 <div className="space-y-4 pt-3 border-t border-outline-variant/10 animate-fade-up">
                   <div>
-                    <label className="block text-[9px] font-bold uppercase tracking-[0.15em] text-on-surface-variant/60 mb-2">Vehicle Type</label>
-                    <select value={editVehicleType} onChange={(e) => setEditVehicleType(e.target.value)}
-                      className="w-full px-4 py-3 rounded-xl bg-surface-container-low border border-outline-variant/15 font-medium text-sm">
-                      <option>Car</option><option>Three-Wheeler</option><option>Bike</option><option>Van</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-[9px] font-bold uppercase tracking-[0.15em] text-on-surface-variant/60 mb-2">License Plate</label>
+                    <label className="block text-[9px] font-bold uppercase tracking-[0.15em] text-on-surface-variant/60 mb-2">Vehicle Plate</label>
                     <input type="text" value={editLicensePlate} onChange={(e) => setEditLicensePlate(e.target.value)}
                       className="w-full px-4 py-3 rounded-xl bg-surface-container-low border border-outline-variant/15 font-medium text-sm uppercase" placeholder="ABC-1234" />
                   </div>

@@ -7,94 +7,134 @@ import { supabase } from '../supabaseClient';
 import { useAuth } from '../contexts/AuthContext';
 import { useGoogleMaps } from '../contexts/GoogleMapsProvider';
 
+// ─── Pricing Config ───────────────────────────────────────
+// These match the master architecture's Distance-Only Flat Rate
+const PRICING = {
+  bike: { base: 50, perKm: 70, seats: 1 },
+  tuk:  { base: 50, perKm: 80, seats: 3 },
+  car:  { base: 80, perKm: 100, seats: 4 },
+};
+
 export default function OfferRide() {
   const navigate = useNavigate();
   const { session } = useAuth();
   const { isLoaded } = useGoogleMaps();
 
-  // User details
-  const [vehicleType, setVehicleType] = useState('Car');
-  const [availableSeats, setAvailableSeats] = useState(2);
-  const [departureTime, setDepartureTime] = useState('');
+  // ─── Driver profile data ──────────────────────────────────
+  const [vehicleType, setVehicleType] = useState('');   // 'bike', 'tuk', or 'car'
+  const [availableSeats, setAvailableSeats] = useState(0);
+  const [profileReady, setProfileReady] = useState(false);
 
-  // Map / Route Details
+  // ─── Location inputs ─────────────────────────────────────
   const autocompletePickup = useRef(null);
   const autocompleteDropoff = useRef(null);
-  
-  const [pickup, setPickup] = useState(null);
-  const [dropoff, setDropoff] = useState(null);
-  
+  const [pickup, setPickup] = useState(null);   // { address, lat, lng }
+  const [dropoff, setDropoff] = useState(null);  // { address, lat, lng }
+  const [departureTime, setDepartureTime] = useState('');
+
+  // ─── Route & pricing ─────────────────────────────────────
   const [distanceKm, setDistanceKm] = useState(0);
+  const [durationMin, setDurationMin] = useState(0);
+  const [routePolyline, setRoutePolyline] = useState('');
   const [calculatedFare, setCalculatedFare] = useState(0);
   const [isCalculating, setIsCalculating] = useState(false);
   const [isPublishing, setIsPublishing] = useState(false);
   const [error, setError] = useState('');
 
-  // Fetch driver details on mount
+  // ─── 1. Fetch driver profile on mount ─────────────────────
+  // We need: vehicle_type, vehicle_plate, phone_number, is_verified
+  // In our new schema, profiles.id = session.user.id (auth.uid())
   useEffect(() => {
-    const fetchUserVehicle = async () => {
-      if (session?.user) {
-        const { data } = await supabase
-          .from('users')
-          .select('vehicle_type')
-          .eq('user_id', session.user.id)
-          .single();
-        if (data?.vehicle_type) {
-          setVehicleType(data.vehicle_type);
-        }
+    const fetchDriverProfile = async () => {
+      if (!session?.user) return;
+
+      const { data, error: fetchErr } = await supabase
+        .from('profiles')
+        .select('vehicle_type, vehicle_plate, phone_number, is_verified')
+        .eq('id', session.user.id)
+        .single();
+
+      if (fetchErr) {
+        setError('Could not load your profile. Please try again.');
+        return;
       }
+
+      if (!data.vehicle_type) {
+        setError('Please set your vehicle type in your Profile before posting a ride.');
+        return;
+      }
+      if (!data.vehicle_plate) {
+        setError('Please add your license plate in your Profile before posting a ride.');
+        return;
+      }
+      if (!data.phone_number) {
+        setError('Please add your WhatsApp number in your Profile before posting a ride.');
+        return;
+      }
+
+      // Auto-set vehicle type and seats from profile
+      const vType = data.vehicle_type.toLowerCase(); // ensure lowercase
+      setVehicleType(vType);
+      setAvailableSeats(PRICING[vType]?.seats || 1);
+      setProfileReady(true);
     };
-    fetchUserVehicle();
+
+    fetchDriverProfile();
   }, [session]);
 
-  // Dynamic Pricing Logic
+  // ─── 2. Calculate route when both locations are set ────────
+  // We use the Directions API (not DistanceMatrix) because we
+  // also need the encoded polyline for the rides table.
   useEffect(() => {
-    if (pickup && dropoff && isLoaded) {
-      calculateDistanceAndFare();
-    } else {
+    if (!pickup || !dropoff || !isLoaded || !vehicleType) {
       setCalculatedFare(0);
       setDistanceKm(0);
+      setDurationMin(0);
+      setRoutePolyline('');
+      return;
     }
+
+    calculateRoute();
   }, [pickup, dropoff, vehicleType, isLoaded]);
 
-  const calculateDistanceAndFare = () => {
+  const calculateRoute = async () => {
     setIsCalculating(true);
-    const service = new window.google.maps.DistanceMatrixService();
-    service.getDistanceMatrix(
-      {
-        origins: [{ lat: pickup.lat, lng: pickup.lng }],
-        destinations: [{ lat: dropoff.lat, lng: dropoff.lng }],
-        travelMode: 'DRIVING',
-      },
-      (response, status) => {
-        setIsCalculating(false);
-        if (status === 'OK' && response.rows[0].elements[0].status === 'OK') {
-          const distanceMeters = response.rows[0].elements[0].distance.value;
-          const km = distanceMeters / 1000;
-          setDistanceKm(km);
+    setError('');
 
-          // Pricing Strategy
-          let baseFare = 0;
-          let perKm = 0;
-          
-          if (['Bike', 'Three-Wheeler'].includes(vehicleType)) {
-            baseFare = 60;
-            perKm = 50;
-          } else {
-            // Car / EV / WagonR / default
-            baseFare = 100;
-            perKm = 80;
-          }
-          
-          const totalFare = Math.round(baseFare + (perKm * km));
-          setCalculatedFare(totalFare);
-        } else {
-          setError('Could not calculate distance between these locations.');
-        }
+    try {
+      const directionsService = new window.google.maps.DirectionsService();
+
+      const result = await directionsService.route({
+        origin: { lat: pickup.lat, lng: pickup.lng },
+        destination: { lat: dropoff.lat, lng: dropoff.lng },
+        travelMode: window.google.maps.TravelMode.DRIVING,
+      });
+
+      // Extract distance, duration, and polyline from the response
+      const leg = result.routes[0].legs[0];
+      const km = leg.distance.value / 1000;       // meters → km
+      const mins = leg.duration.value / 60;         // seconds → minutes
+      const polyline = result.routes[0].overview_polyline;
+
+      setDistanceKm(km);
+      setDurationMin(mins);
+      setRoutePolyline(polyline);
+
+      // Apply pricing formula: base + (perKm × km)
+      const pricing = PRICING[vehicleType];
+      if (pricing) {
+        const fare = Math.round(pricing.base + pricing.perKm * km);
+        setCalculatedFare(fare);
       }
-    );
+    } catch (err) {
+      console.error('Directions API error:', err);
+      setError('Could not calculate route. Please check your locations.');
+    } finally {
+      setIsCalculating(false);
+    }
   };
 
+  // ─── 3. Handle place selection from Autocomplete ──────────
   const onPickupPlaceChanged = () => {
     if (autocompletePickup.current !== null) {
       const place = autocompletePickup.current.getPlace();
@@ -102,7 +142,7 @@ export default function OfferRide() {
         setPickup({
           address: place.formatted_address || place.name,
           lat: place.geometry.location.lat(),
-          lng: place.geometry.location.lng()
+          lng: place.geometry.location.lng(),
         });
       }
     }
@@ -115,76 +155,67 @@ export default function OfferRide() {
         setDropoff({
           address: place.formatted_address || place.name,
           lat: place.geometry.location.lat(),
-          lng: place.geometry.location.lng()
+          lng: place.geometry.location.lng(),
         });
       }
     }
   };
 
+  // ─── 4. Publish ride to Supabase ──────────────────────────
   const handlePublish = async () => {
-    if (!pickup || !dropoff || !departureTime || !availableSeats) {
+    if (!pickup || !dropoff || !departureTime) {
       setError('Please fill in all details before publishing.');
       return;
     }
+    if (!calculatedFare || calculatedFare === 0) {
+      setError('Please wait for the fare to calculate before publishing.');
+      return;
+    }
+
     setError('');
     setIsPublishing(true);
 
-    // Get the user's full profile to validate driver details
-    const { data: userData, error: userError } = await supabase
-      .from('users')
-      .select('id, vehicle_type, license_plate, phone_number, user_type')
-      .eq('user_id', session.user.id)
-      .single();
-
-    if (userError) {
-      setError('Could not verify driver profile.');
-      setIsPublishing(false);
-      return;
-    }
-
-    // Validate driver has required info
-    if (!userData.phone_number) {
-      setError('Please add your WhatsApp number in your Profile before publishing a ride.');
-      setIsPublishing(false);
-      return;
-    }
-    if (!userData.vehicle_type || !userData.license_plate) {
-      setError('Please complete your vehicle details in your Profile before publishing a ride.');
-      setIsPublishing(false);
-      return;
-    }
-
-    // Build departure date
+    // Build departure datetime
     const [hours, minutes] = departureTime.split(':');
     const departureDate = new Date();
     departureDate.setHours(parseInt(hours, 10), parseInt(minutes, 10), 0, 0);
 
-    // If departure time is in the past, set it to tomorrow
+    // If departure time has already passed today, set it to tomorrow
     if (departureDate < new Date()) {
       departureDate.setDate(departureDate.getDate() + 1);
     }
 
-    const { error: insertError } = await supabase
+    const { data: insertedRide, error: insertError } = await supabase
       .from('rides')
       .insert({
-        driver_id: userData.id,
-        starting_point: pickup.address,
-        end_point: dropoff.address,
-        departure_time: departureDate.toISOString(),
+        driver_id: session.user.id,       // profiles.id = auth.uid()
+        vehicle_type: vehicleType,
         available_seats: availableSeats,
-        vehicle_type: userData.vehicle_type, // Use profile vehicle, not local state
-        calculated_fare: calculatedFare,
-      });
+        start_lat: pickup.lat,
+        start_lng: pickup.lng,
+        end_lat: dropoff.lat,
+        end_lng: dropoff.lng,
+        start_address: pickup.address,
+        end_address: dropoff.address,
+        route_polyline: routePolyline,
+        departure_time: departureDate.toISOString(),
+        price_per_seat: calculatedFare,
+      })
+      .select('id')    // ← Ask Supabase to return the new row's ID
+      .single();
+
+    setIsPublishing(false);
 
     if (insertError) {
+      console.error('Insert error:', insertError);
       setError(insertError.message);
-      setIsPublishing(false);
     } else {
-      setIsPublishing(false);
-      navigate('/dashboard');
+      // Redirect to the driver's live request page
+      navigate(`/active-ride/${insertedRide.id}`);
     }
   };
 
+  // ─── Loading state ────────────────────────────────────────
   if (!isLoaded) {
     return (
       <div className="bg-surface min-h-screen flex items-center justify-center">
@@ -195,11 +226,17 @@ export default function OfferRide() {
     );
   }
 
+  // ─── Vehicle type display helper ──────────────────────────
+  const vehicleLabel = vehicleType === 'tuk' ? 'Tuk-Tuk' : vehicleType.charAt(0).toUpperCase() + vehicleType.slice(1);
+  const vehicleIcon = vehicleType === 'bike' ? 'two_wheeler' : vehicleType === 'tuk' ? 'electric_rickshaw' : 'directions_car';
+
+  // ─── RENDER ───────────────────────────────────────────────
   return (
     <div className="bg-surface font-body text-on-surface min-h-screen pb-28">
       <TopNavBar showAvatar showNotification />
 
       <main className="px-6 mt-4 content-grid">
+        {/* Header */}
         <section className="mb-8 animate-fade-up">
           <span className="font-label text-[10px] font-semibold uppercase tracking-wider text-primary mb-2 block">
             Driver Console
@@ -211,6 +248,7 @@ export default function OfferRide() {
           </h2>
         </section>
 
+        {/* Error banner */}
         {error && (
           <div className="mb-6 p-4 bg-error/10 text-error rounded-xl text-sm font-medium flex items-center gap-2">
             <span className="material-symbols-outlined text-lg">error</span>
@@ -218,8 +256,9 @@ export default function OfferRide() {
           </div>
         )}
 
-        {/* Offering Form */}
+        {/* ── Form ── */}
         <section className="space-y-6">
+          {/* Location inputs with connecting dashed line */}
           <div className="bg-surface-container-low rounded-xl p-6 relative overflow-hidden">
             <div className="absolute left-6 top-[3.75rem] bottom-[3.75rem] w-px border-l-2 border-dashed border-outline-variant/30"></div>
             <div className="space-y-8">
@@ -237,7 +276,7 @@ export default function OfferRide() {
                     onPlaceChanged={onPickupPlaceChanged}
                     options={{
                       componentRestrictions: { country: 'lk' },
-                      fields: ['formatted_address', 'geometry', 'name']
+                      fields: ['formatted_address', 'geometry', 'name'],
                     }}
                   >
                     <input
@@ -262,7 +301,7 @@ export default function OfferRide() {
                     onPlaceChanged={onDropoffPlaceChanged}
                     options={{
                       componentRestrictions: { country: 'lk' },
-                      fields: ['formatted_address', 'geometry', 'name']
+                      fields: ['formatted_address', 'geometry', 'name'],
                     }}
                   >
                     <input
@@ -276,6 +315,7 @@ export default function OfferRide() {
             </div>
           </div>
 
+          {/* Time + Vehicle Info row */}
           <div className="grid grid-cols-2 gap-3 animate-fade-up stagger-3">
             {/* Departure Time */}
             <div className="bg-surface-container-low rounded-xl p-5">
@@ -292,24 +332,21 @@ export default function OfferRide() {
                 onChange={(e) => setDepartureTime(e.target.value)}
               />
             </div>
-            {/* Available Seats */}
+            {/* Vehicle + Seats (auto-set from profile, read-only) */}
             <div className="bg-surface-container-low rounded-xl p-5">
               <div className="flex items-center gap-2 mb-3">
-                <span className="material-symbols-outlined text-primary text-lg">group</span>
+                <span className="material-symbols-outlined text-primary text-lg">{vehicleIcon}</span>
                 <label className="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">
-                  Seats
+                  Vehicle
                 </label>
               </div>
-              <select 
-                className="w-full bg-surface-container-lowest border-none rounded-lg py-2 px-3 text-body text-sm font-semibold focus:ring-primary shadow-sm"
-                value={availableSeats}
-                onChange={(e) => setAvailableSeats(Number(e.target.value))}
-              >
-                <option value={1}>1 Seat</option>
-                <option value={2}>2 Seats</option>
-                <option value={3}>3 Seats</option>
-                <option value={4}>4+ Seats</option>
-              </select>
+              <div className="bg-surface-container-lowest rounded-lg py-2 px-3 text-sm font-semibold">
+                {profileReady ? (
+                  <span>{vehicleLabel} · {availableSeats} seat{availableSeats > 1 ? 's' : ''}</span>
+                ) : (
+                  <span className="text-outline">Loading...</span>
+                )}
+              </div>
             </div>
           </div>
 
@@ -318,8 +355,8 @@ export default function OfferRide() {
             <div className="flex-1 py-1 z-10">
               <p className="font-headline font-bold text-lg mb-1">Estimated Earnings</p>
               <p className="text-xs text-on-surface-variant mb-4 leading-relaxed">
-                {distanceKm > 0 
-                  ? `Based on ${distanceKm.toFixed(1)} km route.`
+                {distanceKm > 0
+                  ? `${distanceKm.toFixed(1)} km · ${Math.round(durationMin)} min drive`
                   : 'Enter route to see estimated earnings.'}
               </p>
               <div className="inline-flex items-center gap-2 bg-primary px-3 py-1.5 rounded-full transition-all">
@@ -336,11 +373,9 @@ export default function OfferRide() {
               </div>
             </div>
             <div className="absolute right-0 top-0 bottom-0 w-32 bg-primary-fixed overflow-hidden z-0">
-              <img
-                alt="Map abstract"
-                className="w-full h-full object-cover opacity-50 mix-blend-multiply"
-                src="https://lh3.googleusercontent.com/aida-public/AB6AXuAwmlbL1BLFajHsehWVp6hvbp-pQydOskrRT1GGiXWEZvri4Bi2T6ZVdjO0snRBuR9gluF7RFiJoFOWT_uYKig_Av13Hz_RXoA4WhvdE0VA9rQuRxTH8rtCrGsa2i3PJG_YdXsBh1m0urOkHrHn-qTiEUMMLgkt1wyTIGjPuHAuW-HsMWFpkY8_3bfEYGKuONwd_aJsWaDe-FswKJaLND_loUkpoxCb8Mjs2Mm1LdvkORs_tF8YnRAknJi7YQTu8lXY-mriPTuY6DQ"
-              />
+              <div className="w-full h-full flex items-center justify-center opacity-20">
+                <span className="material-symbols-outlined text-7xl text-primary">route</span>
+              </div>
               <div className="absolute inset-0 bg-gradient-to-l from-transparent to-surface-container-high"></div>
             </div>
           </div>
@@ -348,9 +383,9 @@ export default function OfferRide() {
 
         {/* Publish Button */}
         <section className="mt-8">
-          <button 
+          <button
             onClick={handlePublish}
-            disabled={isPublishing || !pickup || !dropoff || !departureTime}
+            disabled={isPublishing || !pickup || !dropoff || !departureTime || !profileReady || calculatedFare === 0}
             className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-primary to-primary-container text-white py-4 sm:py-5 rounded-full font-headline font-extrabold text-lg tracking-tight shadow-lg shadow-primary/20 btn-press disabled:opacity-50 animate-pulse-glow"
           >
             {isPublishing ? (

@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Autocomplete } from '@react-google-maps/api';
 import TopNavBar from '../components/TopNavBar';
@@ -6,63 +6,37 @@ import BottomNavBar from '../components/BottomNavBar';
 import { supabase } from '../supabaseClient';
 import { useAuth } from '../contexts/AuthContext';
 import { useGoogleMaps } from '../contexts/GoogleMapsProvider';
+import { haversineDistance } from '../utils/haversine';
+
+// ─── Pricing Config (same as OfferRide) ─────────────────────
+const PRICING = {
+  bike: { base: 50, perKm: 70 },
+  tuk:  { base: 50, perKm: 80 },
+  car:  { base: 80, perKm: 100 },
+};
+
+// ─── Matching Config ────────────────────────────────────────
+const MAX_DETOUR_MINUTES = 10;     // Max acceptable detour for the driver
+const PROXIMITY_FILTER_KM = 20;    // Haversine pre-filter radius in km
 
 export default function FindRide() {
   const navigate = useNavigate();
   const { session } = useAuth();
   const { isLoaded } = useGoogleMaps();
 
-  // Search details
+  // ─── Search inputs ────────────────────────────────────────
   const autocompletePickup = useRef(null);
   const autocompleteDropoff = useRef(null);
-  
-  const [pickup, setPickup] = useState(null);
-  const [dropoff, setDropoff] = useState(null);
-  const [departureTime, setDepartureTime] = useState('');
+  const [pickup, setPickup] = useState(null);    // { address, lat, lng }
+  const [dropoff, setDropoff] = useState(null);   // { address, lat, lng }
   const [seatsNeeded, setSeatsNeeded] = useState(1);
-  
-  // Pricing/Distance
-  const [distanceKm, setDistanceKm] = useState(0);
-  const [estimatedFare, setEstimatedFare] = useState({ min: 0, max: 0 });
-  const [isCalculating, setIsCalculating] = useState(false);
+
+  // ─── State ────────────────────────────────────────────────
   const [isSearching, setIsSearching] = useState(false);
+  const [searchProgress, setSearchProgress] = useState('');
   const [error, setError] = useState('');
 
-  // Calculate Distance & Fare
-  useEffect(() => {
-    if (pickup && dropoff && isLoaded) {
-      setIsCalculating(true);
-      const service = new window.google.maps.DistanceMatrixService();
-      service.getDistanceMatrix(
-        {
-          origins: [{ lat: pickup.lat, lng: pickup.lng }],
-          destinations: [{ lat: dropoff.lat, lng: dropoff.lng }],
-          travelMode: 'DRIVING',
-        },
-        (response, status) => {
-          setIsCalculating(false);
-          if (status === 'OK' && response.rows[0].elements[0].status === 'OK') {
-            const distanceMeters = response.rows[0].elements[0].distance.value;
-            const km = distanceMeters / 1000;
-            setDistanceKm(km);
-
-            // Car logic
-            const maxFare = Math.round(100 + (80 * km));
-            // Bike/Three-Wheeler logic
-            const minFare = Math.round(60 + (50 * km));
-            
-            setEstimatedFare({ min: minFare, max: maxFare });
-          } else {
-            setError('Could not calculate distance between these locations.');
-          }
-        }
-      );
-    } else {
-      setDistanceKm(0);
-      setEstimatedFare({ min: 0, max: 0 });
-    }
-  }, [pickup, dropoff, isLoaded]);
-
+  // ─── Place selection handlers ─────────────────────────────
   const onPickupPlaceChanged = () => {
     if (autocompletePickup.current !== null) {
       const place = autocompletePickup.current.getPlace();
@@ -70,7 +44,7 @@ export default function FindRide() {
         setPickup({
           address: place.formatted_address || place.name,
           lat: place.geometry.location.lat(),
-          lng: place.geometry.location.lng()
+          lng: place.geometry.location.lng(),
         });
       }
     }
@@ -83,69 +57,166 @@ export default function FindRide() {
         setDropoff({
           address: place.formatted_address || place.name,
           lat: place.geometry.location.lat(),
-          lng: place.geometry.location.lng()
+          lng: place.geometry.location.lng(),
         });
       }
     }
   };
 
+  // ─── THE SEARCH: Detour Time Algorithm ────────────────────
   const handleSearch = async () => {
-    if (!pickup || !dropoff || !departureTime) {
-      setError('Please provide pickup, drop-off, and departure time.');
+    if (!pickup || !dropoff) {
+      setError('Please enter both pickup and drop-off locations.');
       return;
     }
+
     setError('');
     setIsSearching(true);
+    setSearchProgress('Fetching available rides...');
 
-    const { data: userData, error: userError } = await supabase
-      .from('users')
-      .select('id, phone_number')
-      .eq('user_id', session.user.id)
-      .single();
+    try {
+      // ── Step 1: Fetch all active rides with driver info ────
+      const { data: rides, error: fetchErr } = await supabase
+        .from('rides')
+        .select(`
+          id, driver_id, vehicle_type, available_seats,
+          start_lat, start_lng, end_lat, end_lng,
+          start_address, end_address, route_polyline,
+          departure_time, price_per_seat, status,
+          driver:profiles!rides_driver_id_fkey (
+            full_name, avatar_url, rating_avg, vehicle_plate
+          )
+        `)
+        .eq('status', 'active')
+        .gte('available_seats', seatsNeeded);
 
-    if (userError) {
-      setError('Could not verify profile.');
-      setIsSearching(false);
-      return;
-    }
+      if (fetchErr) throw fetchErr;
 
-    if (!userData.phone_number) {
-      setError('Please add your WhatsApp number in your Profile before searching for rides.');
-      setIsSearching(false);
-      return;
-    }
+      if (!rides || rides.length === 0) {
+        setIsSearching(false);
+        navigate('/ride-matches', {
+          state: {
+            matches: [],
+            pickup,
+            dropoff,
+            seatsNeeded,
+          },
+        });
+        return;
+      }
 
-    const [hours, minutes] = departureTime.split(':');
-    const departureDate = new Date();
-    departureDate.setHours(parseInt(hours, 10), parseInt(minutes, 10), 0, 0);
+      // ── Step 2: Haversine pre-filter ──────────────────────
+      // Only keep rides where the driver passes "close enough"
+      // to both the passenger's pickup AND dropoff.
+      setSearchProgress(`Filtering ${rides.length} rides by proximity...`);
 
-    const { data, error: insertError } = await supabase
-      .from('requests')
-      .insert({
-        passenger_id: userData.id,
-        pickup_location: pickup.address,
-        dropoff_location: dropoff.address,
-        pickup_time: departureDate.toISOString(),
-        seats_needed: seatsNeeded,
-      })
-      .select()
-      .single();
+      const nearbyRides = rides.filter((ride) => {
+        // Check if passenger's pickup is near the driver's route
+        const pickupToStart = haversineDistance(pickup.lat, pickup.lng, ride.start_lat, ride.start_lng);
+        const pickupToEnd = haversineDistance(pickup.lat, pickup.lng, ride.end_lat, ride.end_lng);
 
-    setIsSearching(false);
+        // Check if passenger's dropoff is near the driver's route
+        const dropoffToStart = haversineDistance(dropoff.lat, dropoff.lng, ride.start_lat, ride.start_lng);
+        const dropoffToEnd = haversineDistance(dropoff.lat, dropoff.lng, ride.end_lat, ride.end_lng);
 
-    if (insertError) {
-      setError(insertError.message);
-    } else {
-      navigate('/ride-matches', { 
-        state: { 
-          request: data,
-          estimatedFare,
-          distanceKm
-        } 
+        // The pickup should be near the driver's start OR end
+        // AND the dropoff should be near the driver's start OR end
+        const pickupNearby = Math.min(pickupToStart, pickupToEnd) <= PROXIMITY_FILTER_KM;
+        const dropoffNearby = Math.min(dropoffToStart, dropoffToEnd) <= PROXIMITY_FILTER_KM;
+
+        return pickupNearby && dropoffNearby;
       });
+
+      if (nearbyRides.length === 0) {
+        setIsSearching(false);
+        navigate('/ride-matches', {
+          state: { matches: [], pickup, dropoff, seatsNeeded },
+        });
+        return;
+      }
+
+      // ── Step 3: Detour Time calculation via Directions API ─
+      setSearchProgress(`Calculating detours for ${nearbyRides.length} ride${nearbyRides.length > 1 ? 's' : ''}...`);
+      const directionsService = new window.google.maps.DirectionsService();
+      const matches = [];
+
+      for (const ride of nearbyRides) {
+        try {
+          // 3a. Get the ORIGINAL route duration (driver only)
+          const originalResult = await directionsService.route({
+            origin: { lat: ride.start_lat, lng: ride.start_lng },
+            destination: { lat: ride.end_lat, lng: ride.end_lng },
+            travelMode: window.google.maps.TravelMode.DRIVING,
+          });
+          const originalDurationSec = originalResult.routes[0].legs[0].duration.value;
+
+          // 3b. Get the NEW route duration (with passenger pickup/dropoff)
+          const detourResult = await directionsService.route({
+            origin: { lat: ride.start_lat, lng: ride.start_lng },
+            destination: { lat: ride.end_lat, lng: ride.end_lng },
+            waypoints: [
+              { location: { lat: pickup.lat, lng: pickup.lng }, stopover: true },
+              { location: { lat: dropoff.lat, lng: dropoff.lng }, stopover: true },
+            ],
+            optimizeWaypointOrder: false, // Keep pickup before dropoff
+            travelMode: window.google.maps.TravelMode.DRIVING,
+          });
+
+          // Sum all legs of the detour route
+          const newDurationSec = detourResult.routes[0].legs.reduce(
+            (sum, leg) => sum + leg.duration.value, 0
+          );
+
+          // 3c. Calculate the detour time
+          const detourMinutes = (newDurationSec - originalDurationSec) / 60;
+
+          // 3d. Is it a match? (≤ 10 minutes detour)
+          if (detourMinutes <= MAX_DETOUR_MINUTES) {
+            // Calculate passenger's fare based on their specific distance
+            // (pickup → dropoff leg distance)
+            const passengerLeg = detourResult.routes[0].legs[1]; // Pickup → Dropoff leg
+            const passengerDistKm = passengerLeg.distance.value / 1000;
+
+            const pricing = PRICING[ride.vehicle_type] || PRICING.car;
+            const passengerFare = Math.round(pricing.base + pricing.perKm * passengerDistKm);
+
+            matches.push({
+              ...ride,
+              detourMinutes: Math.round(detourMinutes),
+              passengerDistanceKm: passengerDistKm,
+              passengerFare,
+              originalDurationMin: Math.round(originalDurationSec / 60),
+              newDurationMin: Math.round(newDurationSec / 60),
+            });
+          }
+        } catch (dirErr) {
+          // Skip this ride if Directions API fails for it
+          console.warn(`Directions API failed for ride ${ride.id}:`, dirErr);
+        }
+      }
+
+      // Sort matches: lowest detour time first (best match)
+      matches.sort((a, b) => a.detourMinutes - b.detourMinutes);
+
+      // ── Step 4: Navigate to results page ──────────────────
+      navigate('/ride-matches', {
+        state: {
+          matches,
+          pickup,
+          dropoff,
+          seatsNeeded,
+        },
+      });
+    } catch (err) {
+      console.error('Search error:', err);
+      setError('Something went wrong during the search. Please try again.');
+    } finally {
+      setIsSearching(false);
+      setSearchProgress('');
     }
   };
 
+  // ─── Loading state ────────────────────────────────────────
   if (!isLoaded) {
     return (
       <div className="bg-surface min-h-screen flex items-center justify-center">
@@ -156,6 +227,7 @@ export default function FindRide() {
     );
   }
 
+  // ─── RENDER ───────────────────────────────────────────────
   return (
     <div className="bg-surface font-body text-on-surface min-h-screen pb-28">
       <TopNavBar showAvatar showNotification />
@@ -169,6 +241,7 @@ export default function FindRide() {
             </h2>
           </div>
 
+          {/* Error */}
           {error && (
             <div className="mb-6 p-4 bg-error/10 text-error rounded-xl text-sm font-medium flex items-center gap-2">
               <span className="material-symbols-outlined text-lg">error</span>
@@ -177,6 +250,7 @@ export default function FindRide() {
           )}
 
           <div className="grid grid-cols-1 gap-4 animate-fade-up stagger-2">
+            {/* Location Inputs */}
             <div className="bg-surface-container-low rounded-2xl p-5 sm:p-6 space-y-6">
               <div className="relative flex items-start gap-4">
                 <div className="flex flex-col items-center pt-2">
@@ -204,7 +278,7 @@ export default function FindRide() {
                       onPlaceChanged={onPickupPlaceChanged}
                       options={{
                         componentRestrictions: { country: 'lk' },
-                        fields: ['formatted_address', 'geometry', 'name']
+                        fields: ['formatted_address', 'geometry', 'name'],
                       }}
                     >
                       <input
@@ -223,7 +297,7 @@ export default function FindRide() {
                       onPlaceChanged={onDropoffPlaceChanged}
                       options={{
                         componentRestrictions: { country: 'lk' },
-                        fields: ['formatted_address', 'geometry', 'name']
+                        fields: ['formatted_address', 'geometry', 'name'],
                       }}
                     >
                       <input
@@ -237,22 +311,10 @@ export default function FindRide() {
               </div>
             </div>
 
+            {/* Seats Needed + Search */}
             <div className="space-y-4 animate-fade-up stagger-3">
               <div className="bg-surface-container-low rounded-2xl p-5 sm:p-6 flex flex-col gap-5">
                 <div className="space-y-4">
-                  <div className="space-y-1">
-                    <label className="font-label text-[10px] font-semibold uppercase tracking-wider text-on-surface-variant/60 ml-1">
-                      Departure Time
-                    </label>
-                    <div className="relative">
-                      <input
-                        className="w-full bg-surface-container-lowest ghost-border rounded-xl px-4 py-3 focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all font-semibold"
-                        type="time"
-                        value={departureTime}
-                        onChange={(e) => setDepartureTime(e.target.value)}
-                      />
-                    </div>
-                  </div>
                   <div className="space-y-1">
                     <label className="font-label text-[10px] font-semibold uppercase tracking-wider text-on-surface-variant/60 ml-1">
                       Seats Needed
@@ -260,13 +322,13 @@ export default function FindRide() {
                     <div className="flex items-center justify-between bg-surface-container-lowest ghost-border rounded-xl px-4 py-3">
                       <span className="font-medium">{seatsNeeded} Passenger{seatsNeeded > 1 && 's'}</span>
                       <div className="flex gap-4">
-                        <button 
+                        <button
                           onClick={() => setSeatsNeeded(Math.max(1, seatsNeeded - 1))}
                           className="w-6 h-6 flex items-center justify-center rounded-full bg-surface-container-high text-primary active:scale-90 transition-transform"
                         >
                           <span className="material-symbols-outlined text-sm">remove</span>
                         </button>
-                        <button 
+                        <button
                           onClick={() => setSeatsNeeded(Math.min(4, seatsNeeded + 1))}
                           className="w-6 h-6 flex items-center justify-center rounded-full bg-primary text-white active:scale-90 transition-transform"
                         >
@@ -276,31 +338,22 @@ export default function FindRide() {
                     </div>
                   </div>
 
-                  {/* Estimated Fare Display */}
-                  <div className="bg-surface-container-lowest ghost-border rounded-xl px-4 py-3 flex justify-between items-center">
-                    <div>
-                      <span className="font-label text-[10px] font-bold uppercase tracking-wider text-primary">Est. Fare</span>
-                      <p className="text-xs text-on-surface-variant mt-0.5">
-                        {distanceKm > 0 ? `${distanceKm.toFixed(1)} km route` : 'Enter route to calculate'}
-                      </p>
-                    </div>
-                    {isCalculating ? (
-                      <span className="material-symbols-outlined animate-spin text-primary">progress_activity</span>
-                    ) : distanceKm > 0 ? (
-                      <span className="font-headline font-bold text-lg">Rs. {estimatedFare.min} - {estimatedFare.max}</span>
+                  {/* Search button */}
+                  <button
+                    onClick={handleSearch}
+                    disabled={isSearching || !pickup || !dropoff}
+                    className="w-full py-4 bg-gradient-to-r from-primary to-primary-container text-white font-headline font-bold rounded-full shadow-lg shadow-primary/20 btn-press disabled:opacity-50 flex justify-center items-center gap-2 animate-pulse-glow"
+                  >
+                    {isSearching ? (
+                      <>
+                        <span className="material-symbols-outlined animate-spin">progress_activity</span>
+                        <span className="text-sm">{searchProgress}</span>
+                      </>
                     ) : (
-                      <span className="font-headline font-bold text-lg text-on-surface-variant/40">Rs. 0</span>
+                      'Search Routes'
                     )}
-                  </div>
+                  </button>
                 </div>
-                
-                <button 
-                  onClick={handleSearch}
-                  disabled={isSearching || !pickup || !dropoff || !departureTime}
-                  className="w-full py-4 bg-gradient-to-r from-primary to-primary-container text-white font-headline font-bold rounded-full shadow-lg shadow-primary/20 btn-press disabled:opacity-50 flex justify-center items-center gap-2 animate-pulse-glow"
-                >
-                  {isSearching ? <span className="material-symbols-outlined animate-spin">progress_activity</span> : 'Search Routes'}
-                </button>
               </div>
             </div>
           </div>

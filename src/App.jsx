@@ -8,6 +8,8 @@ import Dashboard from './pages/Dashboard';
 import FindRide from './pages/FindRide';
 import OfferRide from './pages/OfferRide';
 import RideMatches from './pages/RideMatches';
+import DriverActiveRide from './pages/DriverActiveRide';
+import PassengerActiveRide from './pages/PassengerActiveRide';
 import Profile from './pages/Profile';
 import Activity from './pages/Activity';
 
@@ -27,6 +29,8 @@ function App() {
           <Route path="/find-ride" element={<ProtectedRoute><FindRide /></ProtectedRoute>} />
           <Route path="/offer-ride" element={<ProtectedRoute><OfferRide /></ProtectedRoute>} />
           <Route path="/ride-matches" element={<ProtectedRoute><RideMatches /></ProtectedRoute>} />
+          <Route path="/active-ride/:rideId" element={<ProtectedRoute><DriverActiveRide /></ProtectedRoute>} />
+          <Route path="/my-ride/:requestId" element={<ProtectedRoute><PassengerActiveRide /></ProtectedRoute>} />
           <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
           <Route path="/activity" element={<ProtectedRoute><Activity /></ProtectedRoute>} />
         </Routes>

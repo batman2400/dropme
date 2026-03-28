@@ -10,7 +10,7 @@ export default function Activity() {
   const [isLoading, setIsLoading] = useState(true);
   const [deletingId, setDeletingId] = useState(null);
 
-  const isDriver = profile?.user_type === 'driver';
+  const isDriver = !!profile?.vehicle_type;
 
   useEffect(() => {
     if (!profile) return;
@@ -27,9 +27,9 @@ export default function Activity() {
           if (error) throw error;
           setItems(data || []);
         } else {
-          // Fetch all requests this passenger has made
+          // Fetch all ride requests this passenger has made
           const { data, error } = await supabase
-            .from('requests')
+            .from('ride_requests')
             .select('*')
             .eq('passenger_id', profile.id)
             .order('created_at', { ascending: false });
@@ -114,8 +114,8 @@ export default function Activity() {
                   <div className="flex justify-between items-start mb-1">
                     <h4 className="font-bold text-on-surface truncate">
                       {isDriver
-                        ? `${item.starting_point?.split(',')[0]} → ${item.end_point?.split(',')[0]}`
-                        : `${item.pickup_location?.split(',')[0]} → ${item.dropoff_location?.split(',')[0]}`
+                        ? `${item.start_address?.split(',')[0]} → ${item.end_address?.split(',')[0]}`
+                        : `${item.pickup_address?.split(',')[0]} → ${item.dropoff_address?.split(',')[0]}`
                       }
                     </h4>
                     <span className="text-[10px] font-bold text-on-surface-variant uppercase tracking-wider shrink-0 ml-2">
@@ -125,13 +125,13 @@ export default function Activity() {
                   <p className="text-sm text-on-surface-variant">
                     {isDriver
                       ? `${item.vehicle_type} • ${item.available_seats} seat${item.available_seats > 1 ? 's' : ''} • ${item.status}`
-                      : `${item.seats_needed} seat${item.seats_needed > 1 ? 's' : ''} needed • ${item.status}`
+                      : `${item.seats_requested} seat${item.seats_requested > 1 ? 's' : ''} requested • Rs. ${item.fare} • ${item.status}`
                     }
                   </p>
                   <div className="flex items-center gap-2 mt-2">
-                    {isDriver && item.calculated_fare && (
+                    {isDriver && item.price_per_seat && (
                       <span className="inline-block text-xs font-bold text-tertiary bg-tertiary/10 px-3 py-1 rounded-full">
-                        Rs. {item.calculated_fare}
+                        Rs. {item.price_per_seat}/seat
                       </span>
                     )}
                     {isDriver && item.status === 'active' && (
