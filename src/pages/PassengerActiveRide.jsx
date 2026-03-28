@@ -14,6 +14,7 @@ export default function PassengerActiveRide() {
   const [requestData, setRequestData] = useState(null);
   const [status, setStatus] = useState('loading'); // loading, pending, accepted, rejected, cancelled
   const [error, setError] = useState('');
+  const [isCancelling, setIsCancelling] = useState(false);
 
   // ─── 1. Fetch initial request data ────────────────────────
   const fetchRequestData = useCallback(async () => {
@@ -94,6 +95,26 @@ export default function PassengerActiveRide() {
       supabase.removeChannel(channel);
     };
   }, [requestId, status]);
+
+  // ─── 3. Cancel ride request ────────────────────────────────
+  const handleCancelRequest = async () => {
+    if (!window.confirm('Are you sure you want to cancel this ride request?')) return;
+    setIsCancelling(true);
+    try {
+      const { error: cancelErr } = await supabase
+        .from('ride_requests')
+        .update({ status: 'cancelled' })
+        .eq('id', requestId);
+
+      if (cancelErr) throw cancelErr;
+      navigate('/find-ride');
+    } catch (err) {
+      console.error('Cancel error:', err);
+      alert('Failed to cancel request. Please try again.');
+    } finally {
+      setIsCancelling(false);
+    }
+  };
 
   // ─── Render Helpers ───────────────────────────────────────
   if (status === 'loading') {
@@ -183,6 +204,20 @@ export default function PassengerActiveRide() {
                 </div>
               </div>
             </div>
+
+            {/* Cancel Button */}
+            <button
+              onClick={handleCancelRequest}
+              disabled={isCancelling}
+              className="w-full mt-5 py-3.5 rounded-xl border-2 border-error/15 text-error font-bold text-sm flex items-center justify-center gap-2 hover:bg-error/5 active:scale-95 transition-all disabled:opacity-50"
+            >
+              {isCancelling ? (
+                <span className="material-symbols-outlined animate-spin text-base">progress_activity</span>
+              ) : (
+                <span className="material-symbols-outlined text-lg">close</span>
+              )}
+              Cancel Request
+            </button>
           </div>
         </main>
         
@@ -338,6 +373,20 @@ export default function PassengerActiveRide() {
               Contact {driverName.split(' ')[0]} on WhatsApp
             </a>
           )}
+
+          {/* Cancel Ride */}
+          <button
+            onClick={handleCancelRequest}
+            disabled={isCancelling}
+            className="w-full mt-4 py-3 rounded-xl border border-error/15 text-error font-semibold text-sm flex items-center justify-center gap-2 hover:bg-error/5 active:scale-95 transition-all disabled:opacity-50 animate-fade-up stagger-5"
+          >
+            {isCancelling ? (
+              <span className="material-symbols-outlined animate-spin text-base">progress_activity</span>
+            ) : (
+              <span className="material-symbols-outlined text-lg">close</span>
+            )}
+            Cancel Ride
+          </button>
 
         </main>
         

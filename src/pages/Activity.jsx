@@ -59,6 +59,26 @@ export default function Activity() {
     }
   };
 
+  const handleCancelRequest = async (requestId) => {
+    if (!window.confirm('Are you sure you want to cancel this ride request?')) return;
+    setDeletingId(requestId);
+    try {
+      const { error } = await supabase
+        .from('ride_requests')
+        .update({ status: 'cancelled' })
+        .eq('id', requestId);
+      if (error) throw error;
+      setPassengerRequests(prev =>
+        prev.map(item => item.id === requestId ? { ...item, status: 'cancelled' } : item)
+      );
+    } catch (err) {
+      console.error('Error cancelling request:', err);
+      alert('Failed to cancel request.');
+    } finally {
+      setDeletingId(null);
+    }
+  };
+
   const formatDate = (dateStr) => {
     const d = new Date(dateStr);
     const now = new Date();
@@ -184,6 +204,20 @@ export default function Activity() {
                           <span className="material-symbols-outlined text-xs">delete</span>
                         )}
                         Cancel Ride
+                      </button>
+                    )}
+                    {!isOffered && (item.status === 'pending' || item.status === 'accepted') && (
+                      <button
+                        onClick={() => handleCancelRequest(item.id)}
+                        disabled={deletingId === item.id}
+                        className="mt-2 inline-flex items-center gap-1 text-[10px] font-bold text-error bg-error/6 px-2.5 py-1 rounded-full hover:bg-error/12 transition-colors active:scale-95 disabled:opacity-50"
+                      >
+                        {deletingId === item.id ? (
+                          <span className="material-symbols-outlined text-xs animate-spin">progress_activity</span>
+                        ) : (
+                          <span className="material-symbols-outlined text-xs">close</span>
+                        )}
+                        Cancel Request
                       </button>
                     )}
                   </div>
