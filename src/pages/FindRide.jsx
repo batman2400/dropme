@@ -111,20 +111,46 @@ export default function FindRide() {
       setSearchProgress(`Filtering ${rides.length} rides by proximity...`);
 
       const nearbyRides = rides.filter((ride) => {
-        // Check if passenger's pickup is near the driver's route
-        const pickupToStart = haversineDistance(pickup.lat, pickup.lng, ride.start_lat, ride.start_lng);
-        const pickupToEnd = haversineDistance(pickup.lat, pickup.lng, ride.end_lat, ride.end_lng);
+        let isPickupNearby = false;
+        let isDropoffNearby = false;
 
-        // Check if passenger's dropoff is near the driver's route
-        const dropoffToStart = haversineDistance(dropoff.lat, dropoff.lng, ride.start_lat, ride.start_lng);
-        const dropoffToEnd = haversineDistance(dropoff.lat, dropoff.lng, ride.end_lat, ride.end_lng);
+        // Use Google Maps Geometry library to decode the polyline and check proximity
+        if (ride.route_polyline && window.google.maps.geometry) {
+          try {
+            const decodedPath = window.google.maps.geometry.encoding.decodePath(ride.route_polyline);
+            for (let i = 0; i < decodedPath.length; i++) {
+              const pt = decodedPath[i];
+              if (!isPickupNearby) {
+                const distPickup = haversineDistance(pickup.lat, pickup.lng, pt.lat(), pt.lng());
+                if (distPickup <= PROXIMITY_FILTER_KM) isPickupNearby = true;
+              }
+              if (!isDropoffNearby) {
+                const distDropoff = haversineDistance(dropoff.lat, dropoff.lng, pt.lat(), pt.lng());
+                if (distDropoff <= PROXIMITY_FILTER_KM) isDropoffNearby = true;
+              }
+              if (isPickupNearby && isDropoffNearby) break;
+            }
+          } catch (e) {
+            console.warn('Polyline decode failed:', e);
+          }
+        }
 
-        // The pickup should be near the driver's start OR end
-        // AND the dropoff should be near the driver's start OR end
-        const pickupNearby = Math.min(pickupToStart, pickupToEnd) <= PROXIMITY_FILTER_KM;
-        const dropoffNearby = Math.min(dropoffToStart, dropoffToEnd) <= PROXIMITY_FILTER_KM;
+        // Fallback bounding box heuristic for large paths (padding ~20km = ~0.2 degrees)
+        if (!isPickupNearby || !isDropoffNearby) {
+          const padding = PROXIMITY_FILTER_KM / 111;
+          const minLat = Math.min(ride.start_lat, ride.end_lat) - padding;
+          const maxLat = Math.max(ride.start_lat, ride.end_lat) + padding;
+          const minLng = Math.min(ride.start_lng, ride.end_lng) - padding;
+          const maxLng = Math.max(ride.start_lng, ride.end_lng) + padding;
 
-        return pickupNearby && dropoffNearby;
+          const pickupInBox = pickup.lat >= minLat && pickup.lat <= maxLat && pickup.lng >= minLng && pickup.lng <= maxLng;
+          const dropoffInBox = dropoff.lat >= minLat && dropoff.lat <= maxLat && dropoff.lng >= minLng && dropoff.lng <= maxLng;
+          
+          isPickupNearby = isPickupNearby || pickupInBox;
+          isDropoffNearby = isDropoffNearby || dropoffInBox;
+        }
+
+        return isPickupNearby && isDropoffNearby;
       });
 
       if (nearbyRides.length === 0) {
@@ -177,7 +203,8 @@ export default function FindRide() {
             const passengerLeg = detourResult.routes[0].legs[1]; // Pickup → Dropoff leg
             const passengerDistKm = passengerLeg.distance.value / 1000;
 
-            const pricing = PRICING[ride.vehicle_type] || PRICING.car;
+            const vehicleType = ride.vehicle_type ? ride.vehicle_type.toLowerCase() : 'car';
+            const pricing = PRICING[vehicleType] || PRICING.car;
             const passengerFare = Math.round(pricing.base + pricing.perKm * passengerDistKm);
 
             matches.push({
