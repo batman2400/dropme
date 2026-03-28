@@ -88,12 +88,12 @@ export default function FindRide() {
           )
         `)
         .eq('status', 'active')
-        .gte('available_seats', seatsNeeded);
+        .gte('available_seats', seatsNeeded)
+        .neq('driver_id', session.user.id); // Don't show own rides
 
       if (fetchErr) throw fetchErr;
 
-      console.log('--- SEARCH TRACE (DB) ---');
-      console.log('Rides fetched from DB:', rides ? rides.length : 0);
+      console.log('[FindRide] Rides fetched:', rides?.length || 0);
 
       if (!rides || rides.length === 0) {
         setIsSearching(false);
@@ -160,7 +160,7 @@ export default function FindRide() {
         return isPickupNearby && isDropoffNearby;
       });
 
-      console.log('Rides after proximity filter:', nearbyRides.length);
+      console.log('[FindRide] After proximity filter:', nearbyRides.length);
 
       if (nearbyRides.length === 0) {
         setIsSearching(false);
@@ -206,7 +206,7 @@ export default function FindRide() {
           // 3c. Calculate the detour time
           const detourMinutes = (newDurationSec - originalDurationSec) / 60;
 
-          console.log(`Ride ${ride.id}: original=${Math.round(originalDurationSec/60)}min, with detour=${Math.round(newDurationSec/60)}min, detour=${Math.round(detourMinutes)}min, legs=${detourLegs.length}`);
+
 
           // 3d. Is it a match? (≤ MAX_DETOUR_MINUTES detour)
           if (detourMinutes <= MAX_DETOUR_MINUTES) {
@@ -238,7 +238,7 @@ export default function FindRide() {
               newDurationMin: Math.round(newDurationSec / 60),
             });
           } else {
-            console.log(`Ride ${ride.id} rejected: Detour = ${Math.round(detourMinutes)} mins (Limit: ${MAX_DETOUR_MINUTES} mins)`);
+
           }
         } catch (dirErr) {
           // Skip this ride if Directions API fails for it
@@ -246,7 +246,7 @@ export default function FindRide() {
         }
       }
 
-      console.log('Final matches after Detour check:', matches.length);
+      console.log('[FindRide] Final matches:', matches.length);
 
       // Sort matches: lowest detour time first (best match)
       matches.sort((a, b) => a.detourMinutes - b.detourMinutes);
@@ -413,7 +413,7 @@ export default function FindRide() {
         </section>
       </main>
 
-      <BottomNavBar activeTab="home" />
+      <BottomNavBar activeTab="search" />
     </div>
   );
 }

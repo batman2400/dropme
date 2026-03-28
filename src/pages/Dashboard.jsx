@@ -122,7 +122,7 @@ export default function Dashboard() {
         <section className="space-y-5 animate-fade-up stagger-3">
           <div className="flex justify-between items-end">
             <h3 className="font-headline font-bold text-xl">Rides Near You</h3>
-            <Link to="/ride-matches" className="text-primary font-bold text-xs font-label uppercase tracking-[0.15em] btn-press px-2 py-1 rounded-lg">
+            <Link to="/find-ride" className="text-primary font-bold text-xs font-label uppercase tracking-[0.15em] btn-press px-2 py-1 rounded-lg">
               See All →
             </Link>
           </div>

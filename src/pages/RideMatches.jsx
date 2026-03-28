@@ -28,11 +28,26 @@ export default function RideMatches() {
     setError('');
 
     try {
+      // Guard: Check for existing pending/accepted request on this ride
+      const { data: existing } = await supabase
+        .from('ride_requests')
+        .select('id')
+        .eq('ride_id', ride.id)
+        .eq('passenger_id', session.user.id)
+        .in('status', ['pending', 'accepted'])
+        .maybeSingle();
+
+      if (existing) {
+        setError('You already have an active request for this ride.');
+        setRequestingId(null);
+        return;
+      }
+
       const { data: insertedRequest, error: insertError } = await supabase
         .from('ride_requests')
         .insert({
           ride_id: ride.id,
-          passenger_id: session.user.id,     // profiles.id = auth.uid()
+          passenger_id: session.user.id,
           seats_requested: seatsNeeded,
           pickup_lat: pickup.lat,
           pickup_lng: pickup.lng,
@@ -315,7 +330,7 @@ export default function RideMatches() {
         </div>
       </main>
 
-      <BottomNavBar activeTab="rides" />
+      <BottomNavBar activeTab="activity" />
     </div>
   );
 }

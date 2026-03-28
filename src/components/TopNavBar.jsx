@@ -1,17 +1,26 @@
 import { Link } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
 
-export default function TopNavBar({ showAvatar = false, showNotification = false, showHelp = false, avatarSrc = '' }) {
+export default function TopNavBar({ showAvatar = false, showNotification = false, showHelp = false }) {
+  const { profile } = useAuth();
+  const avatarUrl = profile?.avatar_url;
+  const displayInitial = (profile?.full_name || 'U').charAt(0).toUpperCase();
+
   return (
     <header className="w-full pt-12 pb-4 flex justify-between items-center px-6 max-w-screen-xl mx-auto bg-surface">
       <div className="flex items-center gap-3">
         {showAvatar && (
-          <div className="w-10 h-10 rounded-full overflow-hidden bg-surface-container-high">
+          avatarUrl ? (
             <img
-              alt="User Profile Avatar"
-              className="w-full h-full object-cover"
-              src={avatarSrc || 'https://lh3.googleusercontent.com/aida-public/AB6AXuDrfrw6-r56stETRjc6ychcPhnBZfo5yZo5L7PXgXrKm5KGUqUFsf0Zb7gAilk0Els15EJQ6JMxFSIjOKVHI6HVOY-GyLviZniC2SWg3wvIc9UlJdvyLeSk7J9U47jnvWcJt6OOXwlptSZPJlsMw4oZSHWXr1v6wruuzYuqSThHSjSG_LHJR3w_Zgzq4_LZ7cuQ6Cs2kTfX9oQBQcccbCjCS9HQopEBjNwO9Q-XpbX09EKJLAMdo0hes1NaTeV-SoWso7-poe7AYHc'}
+              alt="Profile"
+              className="w-10 h-10 rounded-full object-cover border-2 border-surface-container-high"
+              src={avatarUrl}
             />
-          </div>
+          ) : (
+            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-primary-container flex items-center justify-center text-white font-bold text-sm">
+              {displayInitial}
+            </div>
+          )
         )}
         <Link to="/dashboard" className="font-headline font-bold tracking-tight text-2xl text-[#0b1c30]">
           dropme.

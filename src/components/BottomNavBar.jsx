@@ -2,8 +2,8 @@ import { Link, useLocation } from 'react-router-dom';
 
 const navItems = [
   { key: 'home', icon: 'home', label: 'Home', to: '/dashboard' },
-  { key: 'rides', icon: 'directions_car', label: 'My Rides', to: '/ride-matches' },
-  { key: 'activity', icon: 'history', label: 'Activity', to: '/activity' },
+  { key: 'search', icon: 'search', label: 'Find Ride', to: '/find-ride' },
+  { key: 'activity', icon: 'history', label: 'My Rides', to: '/activity' },
   { key: 'profile', icon: 'person', label: 'Profile', to: '/profile' },
 ];
 

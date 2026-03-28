@@ -149,7 +149,7 @@ export default function Login() {
 
         {/* Success Banner */}
         {successMessage && (
-          <div className="mb-6 p-4 bg-green-50 text-green-700 border border-green-200 rounded-xl text-sm font-medium flex items-center gap-2">
+          <div className="mb-6 p-4 bg-tertiary-container/20 text-tertiary border border-tertiary/20 rounded-xl text-sm font-medium flex items-center gap-2">
             <span className="material-symbols-outlined text-lg">check_circle</span>
             {successMessage}
           </div>
