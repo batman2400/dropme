@@ -92,6 +92,9 @@ export default function FindRide() {
 
       if (fetchErr) throw fetchErr;
 
+      console.log('--- SEARCH TRACE (DB) ---');
+      console.log('Rides fetched from DB:', rides ? rides.length : 0);
+
       if (!rides || rides.length === 0) {
         setIsSearching(false);
         navigate('/ride-matches', {
@@ -117,7 +120,11 @@ export default function FindRide() {
         // Use Google Maps Geometry library to decode the polyline and check proximity
         if (ride.route_polyline && window.google.maps.geometry) {
           try {
-            const decodedPath = window.google.maps.geometry.encoding.decodePath(ride.route_polyline);
+            // Handle both string and object format ({points: "..."} from JS API)
+            const polyStr = typeof ride.route_polyline === 'string' 
+              ? ride.route_polyline 
+              : ride.route_polyline?.points || ride.route_polyline;
+            const decodedPath = window.google.maps.geometry.encoding.decodePath(polyStr);
             for (let i = 0; i < decodedPath.length; i++) {
               const pt = decodedPath[i];
               if (!isPickupNearby) {
@@ -131,7 +138,7 @@ export default function FindRide() {
               if (isPickupNearby && isDropoffNearby) break;
             }
           } catch (e) {
-            console.warn('Polyline decode failed:', e);
+            console.warn('Polyline decode failed for ride', ride.id, ':', e.message);
           }
         }
 
@@ -152,6 +159,8 @@ export default function FindRide() {
 
         return isPickupNearby && isDropoffNearby;
       });
+
+      console.log('Rides after proximity filter:', nearbyRides.length);
 
       if (nearbyRides.length === 0) {
         setIsSearching(false);
@@ -184,24 +193,37 @@ export default function FindRide() {
               { location: { lat: pickup.lat, lng: pickup.lng }, stopover: true },
               { location: { lat: dropoff.lat, lng: dropoff.lng }, stopover: true },
             ],
-            optimizeWaypointOrder: false, // Keep pickup before dropoff
+            optimizeWaypoints: false, // Keep pickup before dropoff
             travelMode: window.google.maps.TravelMode.DRIVING,
           });
 
           // Sum all legs of the detour route
-          const newDurationSec = detourResult.routes[0].legs.reduce(
+          const detourLegs = detourResult.routes[0].legs;
+          const newDurationSec = detourLegs.reduce(
             (sum, leg) => sum + leg.duration.value, 0
           );
 
           // 3c. Calculate the detour time
           const detourMinutes = (newDurationSec - originalDurationSec) / 60;
 
-          // 3d. Is it a match? (≤ 10 minutes detour)
+          console.log(`Ride ${ride.id}: original=${Math.round(originalDurationSec/60)}min, with detour=${Math.round(newDurationSec/60)}min, detour=${Math.round(detourMinutes)}min, legs=${detourLegs.length}`);
+
+          // 3d. Is it a match? (≤ MAX_DETOUR_MINUTES detour)
           if (detourMinutes <= MAX_DETOUR_MINUTES) {
             // Calculate passenger's fare based on their specific distance
-            // (pickup → dropoff leg distance)
-            const passengerLeg = detourResult.routes[0].legs[1]; // Pickup → Dropoff leg
-            const passengerDistKm = passengerLeg.distance.value / 1000;
+            // With 2 waypoints we get 3 legs: Start→Pickup, Pickup→Dropoff, Dropoff→End
+            // Passenger distance is the sum of relevant legs (Pickup→Dropoff)
+            let passengerDistKm = 0;
+            if (detourLegs.length >= 3) {
+              // Normal case: 3 legs, passenger is leg index 1
+              passengerDistKm = detourLegs[1].distance.value / 1000;
+            } else if (detourLegs.length === 2) {
+              // Edge case: pickup/dropoff near start/end, Google merged a leg
+              passengerDistKm = detourLegs[0].distance.value / 1000;
+            } else {
+              // Single leg (identical points) - use haversine as fallback
+              passengerDistKm = haversineDistance(pickup.lat, pickup.lng, dropoff.lat, dropoff.lng);
+            }
 
             const vehicleType = ride.vehicle_type ? ride.vehicle_type.toLowerCase() : 'car';
             const pricing = PRICING[vehicleType] || PRICING.car;
@@ -223,6 +245,8 @@ export default function FindRide() {
           console.warn(`Directions API failed for ride ${ride.id}:`, dirErr);
         }
       }
+
+      console.log('Final matches after Detour check:', matches.length);
 
       // Sort matches: lowest detour time first (best match)
       matches.sort((a, b) => a.detourMinutes - b.detourMinutes);

@@ -114,7 +114,9 @@ export default function OfferRide() {
       const leg = result.routes[0].legs[0];
       const km = leg.distance.value / 1000;       // meters → km
       const mins = leg.duration.value / 60;         // seconds → minutes
-      const polyline = result.routes[0].overview_polyline;
+      // overview_polyline is an object { points: "encoded_string" } in the JS API
+      const rawPolyline = result.routes[0].overview_polyline;
+      const polyline = typeof rawPolyline === 'string' ? rawPolyline : rawPolyline?.points || '';
 
       setDistanceKm(km);
       setDurationMin(mins);
