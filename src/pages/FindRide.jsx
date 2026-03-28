@@ -16,7 +16,7 @@ const PRICING = {
 };
 
 // ─── Matching Config ────────────────────────────────────────
-const MAX_DETOUR_MINUTES = 10;     // Max acceptable detour for the driver
+const MAX_DETOUR_MINUTES = 30;     // Max acceptable detour for the driver
 const PROXIMITY_FILTER_KM = 20;    // Haversine pre-filter radius in km
 
 export default function FindRide() {
@@ -215,6 +215,8 @@ export default function FindRide() {
               originalDurationMin: Math.round(originalDurationSec / 60),
               newDurationMin: Math.round(newDurationSec / 60),
             });
+          } else {
+            console.log(`Ride ${ride.id} rejected: Detour = ${Math.round(detourMinutes)} mins (Limit: ${MAX_DETOUR_MINUTES} mins)`);
           }
         } catch (dirErr) {
           // Skip this ride if Directions API fails for it
