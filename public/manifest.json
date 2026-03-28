@@ -1,0 +1,19 @@
+{
+  "name": "dropme. — Share Your Journey",
+  "short_name": "dropme.",
+  "description": "Pool rides, save money, connect with travelers.",
+  "start_url": "/dashboard",
+  "display": "standalone",
+  "theme_color": "#f8f9ff",
+  "background_color": "#f8f9ff",
+  "orientation": "portrait",
+  "scope": "/",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

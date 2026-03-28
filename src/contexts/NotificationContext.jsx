@@ -1,39 +1,71 @@
 import { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '../supabaseClient';
 import { useAuth } from './AuthContext';
+import {
+  playNotificationSound,
+  requestNotificationPermission,
+  showBrowserNotification,
+  registerServiceWorker,
+} from '../utils/notifications';
 
 const NotificationContext = createContext({});
-
-// Notification sound — base64 encoded short chime (plays without any external file)
-const NOTIFICATION_SOUND_URL = 'data:audio/wav;base64,UklGRlYGAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YTIGAACAgICAgICAgICAgICAgICBgYKDhIWGh4iJiouMjY6PkJGSk5SVlpeYmZqbnJ2en6ChoqOkpaanqKmqq6ytrq+wsbKztLW2t7i5uru8vb6/wMHCw8TFxsfIycrLzM3Oz9DR0tPU1dbX2Nna29zd3t/g4eLj5OXm5+jp6uvs7e7v8PHy8/T19vf4+fr7/P3+/v8AAP/+/fz7+vn49/b19PPy8fDv7u3s6+rp6Ofm5eTj4uHg397d3Nva2djX1tXU09LR0M/OzczLysnIx8bFxMPCwcC/vr28u7q5uLe2tbSzsrGwr66trKuqqainpqWko6KhoJ+enZybmpmYl5aVlJOSkZCPjo2Mi4qJiIeGhYSDgoGAgICAgICAgICAgICAgICBgYKDhIWGh4iJiouMjY6PkJGSk5SVlpeYmZqbnJ2en6ChoqOkpaanqKmqq6ytrq+wsbKztLW2t7i5uru8vb6/wMHCw8TFxsfIycrLzM3Oz9DR0tPU1dbX2Nna29zd3t/g4eLk5ebn6Onq6+zt7u/w8fLz9PX29/j5+vv8/f7+/wAA//79/Pv6+fj39vTz8vHw7+7t7Ovq6ejn5uXk4+Lh4N/e3dzb2tnY19bV1NPR0M/OzczLysnIx8bFxMPCwcC/vr28u7q5uLe2tbSzsrCvr66trKuqqainpqWko6KhoJ+enZybmpmYl5aVlJOSkZCPjo2Mi4qJiIeGhYSDgoGAgICAgICAgICAgICAgICAgYGCg4SFhoeIiYqLjI2Oj5CRkpOUlZaXmJmam5ydnp+goaKjpKWmp6ipqqusra6vsLGys7S1tre4ubq7vL2+v8DBwsPExcbHyMnKy8zNzs/Q0dLT1NXW19jZ2tvc3d7f4OHi4+Tl5ufn6Onq6+zt7u/w8fLz9PX29/j5+vv8/f7+/wAA//79/Pv6+fj39vXz8vHw7+7t7Ovq6ejn5uXk4+Lh4N/e3dzb2tnY19bV1NPS0dDPzs3My8rJyMfGxcTDwsHAv769vLu6ubi3trW0s7KxsK+ura2sq6qpqKempaSjoqGgn56dnJuamZiXlpWUk5KRkI+OjYyLiomIh4aFhIOCgYCAgICAgICAgICAgICAgA==';
 
 export function NotificationProvider({ children }) {
   const { session } = useAuth();
   const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
-  const [showPopup, setShowPopup] = useState(null); // full request data for popup
+  const [showPopup, setShowPopup] = useState(null);
+  const [notifPermission, setNotifPermission] = useState('default');
   const channelRef = useRef(null);
-  const audioRef = useRef(null);
 
   // Active ride IDs for the driver
   const [activeRideIds, setActiveRideIds] = useState([]);
 
-  // Initialize audio
+  // ─── Initialize: Service Worker + Notification Permission ──
   useEffect(() => {
-    audioRef.current = new Audio(NOTIFICATION_SOUND_URL);
-    audioRef.current.volume = 0.6;
+    // Register service worker
+    registerServiceWorker();
+
+    // Check and request notification permission
+    if ('Notification' in window) {
+      setNotifPermission(Notification.permission);
+    }
   }, []);
 
-  const playSound = useCallback(() => {
-    try {
-      if (audioRef.current) {
-        audioRef.current.currentTime = 0;
-        audioRef.current.play().catch(() => {}); // Ignore if blocked by browser
+  // Request permission (call from a user interaction)
+  const requestPermission = useCallback(async () => {
+    const perm = await requestNotificationPermission();
+    setNotifPermission(perm);
+    return perm;
+  }, []);
+
+  // ─── Notify: Sound + Browser Notification + In-App Popup ───
+  const notifyDriver = useCallback((notification) => {
+    // 1. Play loud chime sound
+    playNotificationSound();
+
+    // 2. Show browser-level notification (works when tab not focused)
+    if ('Notification' in window && Notification.permission === 'granted') {
+      const browserNotif = showBrowserNotification('🚗 New Ride Request!', {
+        body: `${notification.passengerName} wants ${notification.seatsRequested} seat${notification.seatsRequested > 1 ? 's' : ''} — Rs. ${notification.fare}\n${notification.pickupAddress?.split(',')[0]} → ${notification.dropoffAddress?.split(',')[0]}`,
+        tag: `ride-request-${notification.requestId}`,
+        data: { rideId: notification.rideId },
+      });
+
+      // When user clicks the OS notification, focus the app
+      if (browserNotif) {
+        browserNotif.onclick = () => {
+          window.focus();
+          browserNotif.close();
+        };
       }
-    } catch {}
+    }
+
+    // 3. Show in-app popup
+    setShowPopup(notification);
   }, []);
 
-  // Fetch driver's active rides on mount
+  // ─── Fetch driver's active rides ───────────────────────────
   useEffect(() => {
     if (!session?.user) {
       setActiveRideIds([]);
@@ -56,7 +88,7 @@ export function NotificationProvider({ children }) {
 
     fetchActiveRides();
 
-    // Also listen for new rides this driver creates
+    // Listen for new/updated rides
     const ridesChannel = supabase
       .channel('driver-rides-global')
       .on(
@@ -92,7 +124,7 @@ export function NotificationProvider({ children }) {
     };
   }, [session?.user?.id]);
 
-  // Listen for ride_requests on ALL the driver's active rides
+  // ─── Listen for ride requests (realtime) ───────────────────
   useEffect(() => {
     if (!session?.user || activeRideIds.length === 0) {
       if (channelRef.current) {
@@ -148,11 +180,8 @@ export function NotificationProvider({ children }) {
           setNotifications(prev => [notification, ...prev]);
           setUnreadCount(prev => prev + 1);
 
-          // Play notification sound
-          playSound();
-
-          // Show rich popup with full details
-          setShowPopup(notification);
+          // 🔔 Trigger ALL notification channels
+          notifyDriver(notification);
         }
       )
       .subscribe();
@@ -163,12 +192,11 @@ export function NotificationProvider({ children }) {
       supabase.removeChannel(channel);
       channelRef.current = null;
     };
-  }, [session?.user?.id, activeRideIds, playSound]);
+  }, [session?.user?.id, activeRideIds, notifyDriver]);
 
-  // ─── Accept/Reject from popup ──────────────────────────────
+  // ─── Accept from popup ─────────────────────────────────────
   const handleAcceptFromPopup = useCallback(async (notification) => {
     try {
-      // Update ride_request status to accepted
       const { error: updateErr } = await supabase
         .from('ride_requests')
         .update({ status: 'accepted' })
@@ -176,7 +204,6 @@ export function NotificationProvider({ children }) {
 
       if (updateErr) throw updateErr;
 
-      // Decrement available seats
       const { error: rpcErr } = await supabase
         .rpc('decrement_seats', {
           ride_id_input: notification.rideId,
@@ -193,6 +220,7 @@ export function NotificationProvider({ children }) {
     }
   }, []);
 
+  // ─── Reject from popup ─────────────────────────────────────
   const handleRejectFromPopup = useCallback(async (notification) => {
     try {
       const { error } = await supabase
@@ -225,8 +253,10 @@ export function NotificationProvider({ children }) {
         notifications,
         unreadCount,
         showPopup,
+        notifPermission,
         markAllRead,
         dismissPopup,
+        requestPermission,
         handleAcceptFromPopup,
         handleRejectFromPopup,
         activeRideIds,

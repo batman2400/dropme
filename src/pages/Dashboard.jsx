@@ -7,7 +7,7 @@ import { supabase } from '../supabaseClient';
 
 export default function Dashboard() {
   const { profile } = useAuth();
-  const { unreadCount, markAllRead, activeRideIds } = useNotifications();
+  const { unreadCount, markAllRead, activeRideIds, notifPermission, requestPermission } = useNotifications();
   const navigate = useNavigate();
   const [rides, setRides] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -118,6 +118,27 @@ export default function Dashboard() {
             <span className="text-primary">{displayName}?</span>
           </h2>
         </section>
+
+        {/* Notification Permission Banner */}
+        {notifPermission === 'default' && (
+          <section className="animate-fade-up stagger-2">
+            <button
+              onClick={requestPermission}
+              className="w-full flex items-center gap-3 p-3.5 bg-primary/6 border border-primary/10 rounded-xl text-left active:scale-[0.98] transition-transform"
+            >
+              <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                <span className="material-symbols-outlined text-primary text-lg" style={{ fontVariationSettings: "'FILL' 1" }}>
+                  notifications_active
+                </span>
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="font-bold text-sm text-on-surface">Enable Notifications</p>
+                <p className="text-[11px] text-on-surface-variant">Get alerts when riders request your ride</p>
+              </div>
+              <span className="material-symbols-outlined text-primary text-base">chevron_right</span>
+            </button>
+          </section>
+        )}
 
         {/* Quick Actions */}
         <section className="grid grid-cols-2 gap-3 animate-fade-up stagger-2">
