@@ -128,7 +128,9 @@ export default function OfferRide() {
       }
     } catch (err) {
       console.error('Directions API error:', err);
-      setError('Could not calculate route. Please check your locations.');
+      // Append the actual API error message/code so the developer knows why it failed
+      const apiStatus = err.code || err.message || 'Unknown Error';
+      setError(`Could not calculate route (${apiStatus}). Please check your locations.`);
     } finally {
       setIsCalculating(false);
     }
