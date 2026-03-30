@@ -174,13 +174,18 @@ export default function DriverActiveRide() {
     setError('');
 
     try {
-      // Step 1: Update the request status to 'accepted'
-      const { error: updateErr } = await supabase
+      // Step 1: Update the request status to 'accepted', BUT ONLY if it is still pending
+      const { data: updatedRows, error: updateErr } = await supabase
         .from('ride_requests')
         .update({ status: 'accepted' })
-        .eq('id', request.id);
+        .eq('id', request.id)
+        .eq('status', 'pending')
+        .select();
 
       if (updateErr) throw updateErr;
+      if (!updatedRows || updatedRows.length === 0) {
+        throw new Error('This request is no longer pending (it may have been cancelled).');
+      }
 
       // Step 2: Atomically decrement available_seats using our RPC function
       const { error: rpcErr } = await supabase

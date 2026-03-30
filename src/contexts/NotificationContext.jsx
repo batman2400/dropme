@@ -203,6 +203,45 @@ export function NotificationProvider({ children }) {
           notifyDriver(notification);
         }
       )
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'ride_requests',
+        },
+        (payload) => {
+          const updatedRequest = payload.new;
+          
+          if (!activeRideIds.includes(updatedRequest.ride_id)) return;
+          if (updatedRequest.passenger_id === session.user.id) return;
+
+          // If the request is no longer pending (cancelled, rejected, etc.)
+          if (updatedRequest.status !== 'pending') {
+            // 1. Close the popup if it's currently showing this request
+            setShowPopup(prevPopup => {
+              if (prevPopup && prevPopup.requestId === updatedRequest.id) {
+                return null;
+              }
+              return prevPopup;
+            });
+
+            // 2. Remove from notification list or mark read
+            setNotifications(prev => {
+              const exists = prev.find(n => n.requestId === updatedRequest.id && !n.read);
+              if (exists) {
+                setUnreadCount(count => Math.max(0, count - 1));
+              }
+              // Mark it as read and add a note that it was cancelled
+              return prev.map(n => 
+                n.requestId === updatedRequest.id 
+                  ? { ...n, read: true, isCancelled: updatedRequest.status === 'cancelled' }
+                  : n
+              );
+            });
+          }
+        }
+      )
       .subscribe();
 
     channelRef.current = channel;
@@ -216,12 +255,17 @@ export function NotificationProvider({ children }) {
   // ─── Accept from popup ─────────────────────────────────────
   const handleAcceptFromPopup = useCallback(async (notification) => {
     try {
-      const { error: updateErr } = await supabase
+      const { data: updatedRows, error: updateErr } = await supabase
         .from('ride_requests')
         .update({ status: 'accepted' })
-        .eq('id', notification.requestId);
+        .eq('id', notification.requestId)
+        .eq('status', 'pending')
+        .select();
 
       if (updateErr) throw updateErr;
+      if (!updatedRows || updatedRows.length === 0) {
+        throw new Error('This request was already cancelled or processed.');
+      }
 
       const { error: rpcErr } = await supabase
         .rpc('decrement_seats', {
