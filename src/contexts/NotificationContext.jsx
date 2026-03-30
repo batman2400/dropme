@@ -143,9 +143,15 @@ export function NotificationProvider({ children }) {
     };
   }, [session?.user?.id]);
 
+  // Use a ref for activeRideIds to avoid reconnecting the websocket unnecessarily
+  const activeRideIdsRef = useRef(activeRideIds);
+  useEffect(() => {
+    activeRideIdsRef.current = activeRideIds;
+  }, [activeRideIds]);
+
   // ─── Listen for ride requests (realtime) ───────────────────
   useEffect(() => {
-    if (!session?.user || activeRideIds.length === 0) {
+    if (!session?.user) {
       if (channelRef.current) {
         supabase.removeChannel(channelRef.current);
         channelRef.current = null;
@@ -153,12 +159,10 @@ export function NotificationProvider({ children }) {
       return;
     }
 
-    if (channelRef.current) {
-      supabase.removeChannel(channelRef.current);
-    }
+    if (channelRef.current) return; // Already connected
 
     const channel = supabase
-      .channel('global-ride-notifications')
+      .channel(`global-ride-notifications-${session.user.id}`)
       .on(
         'postgres_changes',
         {
@@ -169,7 +173,8 @@ export function NotificationProvider({ children }) {
         async (payload) => {
           const newRequest = payload.new;
 
-          if (!activeRideIds.includes(newRequest.ride_id)) return;
+          // Instead of depending on state, read the latest from the Ref
+          if (!activeRideIdsRef.current.includes(newRequest.ride_id)) return;
           if (newRequest.passenger_id === session.user.id) return;
 
           // Fetch passenger profile
@@ -213,7 +218,7 @@ export function NotificationProvider({ children }) {
         (payload) => {
           const updatedRequest = payload.new;
           
-          if (!activeRideIds.includes(updatedRequest.ride_id)) return;
+          if (!activeRideIdsRef.current.includes(updatedRequest.ride_id)) return;
           if (updatedRequest.passenger_id === session.user.id) return;
 
           // If the request is no longer pending (cancelled, rejected, etc.)
@@ -250,7 +255,7 @@ export function NotificationProvider({ children }) {
       supabase.removeChannel(channel);
       channelRef.current = null;
     };
-  }, [session?.user?.id, activeRideIds, notifyDriver]);
+  }, [session?.user, notifyDriver]);
 
   // ─── Accept from popup ─────────────────────────────────────
   const handleAcceptFromPopup = useCallback(async (notification) => {
