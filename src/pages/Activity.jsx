@@ -40,6 +40,11 @@ export default function Activity() {
 
     fetchActivity();
 
+    // ─── Auto-refresh polling (Fallback if Realtime drops) ─────
+    const intervalId = setInterval(() => {
+      fetchActivity();
+    }, 15000); // 15 seconds
+
     // ─── Realtime: Listen for ride request status changes ─────
     const requestsChannel = supabase
       .channel('activity-requests')
@@ -79,6 +84,7 @@ export default function Activity() {
       .subscribe();
 
     return () => {
+      clearInterval(intervalId);
       supabase.removeChannel(requestsChannel);
       supabase.removeChannel(ridesChannel);
     };

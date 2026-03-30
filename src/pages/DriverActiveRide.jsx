@@ -162,7 +162,18 @@ export default function DriverActiveRide() {
     };
   }, [rideId]);
 
-  // ─── 3. Accept a request ──────────────────────────────────
+  // ─── 3. Auto-refresh polling (Fallback if Realtime drops) ──
+  useEffect(() => {
+    if (!rideId || isLoading) return;
+    
+    const intervalId = setInterval(() => {
+      fetchRideData();
+    }, 15000); // 15 seconds fallback refresh
+    
+    return () => clearInterval(intervalId);
+  }, [fetchRideData, rideId, isLoading]);
+
+  // ─── 4. Accept a request ──────────────────────────────────
   const handleAccept = async (request) => {
     // Check if enough seats remain
     if (ride.available_seats < request.seats_requested) {

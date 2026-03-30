@@ -138,7 +138,10 @@ export function NotificationProvider({ children }) {
       )
       .subscribe();
 
+    const intervalId = setInterval(fetchActiveRides, 30000); // 30s fetch
+
     return () => {
+      clearInterval(intervalId);
       supabase.removeChannel(ridesChannel);
     };
   }, [session?.user?.id]);
@@ -148,6 +151,73 @@ export function NotificationProvider({ children }) {
   useEffect(() => {
     activeRideIdsRef.current = activeRideIds;
   }, [activeRideIds]);
+
+  // ─── Auto-fetch pending requests (Fallback Polling) ────────
+  useEffect(() => {
+    if (!session?.user || activeRideIds.length === 0) return;
+
+    const fetchPendingRequests = async () => {
+      try {
+        const { data } = await supabase
+          .from('ride_requests')
+          .select(`
+            id, ride_id, passenger_id, seats_requested, pickup_address, dropoff_address, fare, created_at, status,
+            passenger:profiles!ride_requests_passenger_id_fkey (
+              full_name, avatar_url, rating_avg
+            )
+          `)
+          .in('ride_id', activeRideIds)
+          .eq('status', 'pending');
+
+        if (data) {
+          data.forEach(req => {
+            if (req.passenger_id === session.user.id) return;
+
+            setNotifications(prev => {
+              // Check if we already have a notification for this request ID
+              const exists = prev.some(n => n.requestId === req.id);
+              if (!exists) {
+                const notification = {
+                  id: req.id,
+                  type: 'ride_request',
+                  rideId: req.ride_id,
+                  requestId: req.id,
+                  passengerId: req.passenger_id,
+                  passengerName: req.passenger?.full_name || 'Someone',
+                  passengerAvatar: req.passenger?.avatar_url,
+                  passengerRating: req.passenger?.rating_avg || '5.0',
+                  seatsRequested: req.seats_requested,
+                  pickupAddress: req.pickup_address || 'Pickup',
+                  dropoffAddress: req.dropoff_address || 'Dropoff',
+                  fare: req.fare,
+                  createdAt: req.created_at,
+                  read: false,
+                };
+                
+                // Determine if this is a "new" missed request that should popup
+                // If it was created within the last 2 minutes, trigger popup
+                const ageMinutes = (new Date() - new Date(req.created_at)) / 60000;
+                if (ageMinutes < 2) {
+                  notifyDriver(notification);
+                }
+                
+                setUnreadCount(count => count + 1);
+                return [notification, ...prev];
+              }
+              return prev;
+            });
+          });
+        }
+      } catch (err) {
+        console.error('Polling error', err);
+      }
+    };
+
+    // Initial check and then every 15 seconds
+    fetchPendingRequests();
+    const intervalId = setInterval(fetchPendingRequests, 15000);
+    return () => clearInterval(intervalId);
+  }, [session?.user, activeRideIds, notifyDriver]);
 
   // ─── Listen for ride requests (realtime) ───────────────────
   useEffect(() => {

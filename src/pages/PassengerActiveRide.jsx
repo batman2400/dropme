@@ -96,7 +96,18 @@ export default function PassengerActiveRide() {
     };
   }, [requestId, status]);
 
-  // ─── 3. Cancel ride request ────────────────────────────────
+  // ─── 3. Auto-refresh polling (Fallback if Realtime drops) ──
+  useEffect(() => {
+    if (!requestId || status === 'error' || status === 'cancelled' || status === 'rejected') return;
+    
+    const intervalId = setInterval(() => {
+      fetchRequestData();
+    }, 15000); // 15 seconds fallback refresh
+    
+    return () => clearInterval(intervalId);
+  }, [fetchRequestData, requestId, status]);
+
+  // ─── 4. Cancel ride request ────────────────────────────────
   const handleCancelRequest = async () => {
     if (!window.confirm('Are you sure you want to cancel this ride request?')) return;
     setIsCancelling(true);
