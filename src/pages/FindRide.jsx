@@ -10,9 +10,9 @@ import { haversineDistance } from '../utils/haversine';
 
 // ─── Pricing Config (same as OfferRide) ─────────────────────
 const PRICING = {
-  bike: { base: 50, perKm: 70 },
-  tuk:  { base: 50, perKm: 80 },
-  car:  { base: 80, perKm: 100 },
+  bike: { base: 40, perKm: 40 },
+  tuk:  { base: 50, perKm: 50 },
+  car:  { base: 70, perKm: 60 },
 };
 
 // ─── Matching Config ────────────────────────────────────────
@@ -76,6 +76,7 @@ export default function FindRide() {
 
     try {
       // ── Step 1: Fetch all active rides with driver info ────
+      const thirtyMinAgo = new Date(Date.now() - 30 * 60 * 1000).toISOString();
       const { data: rides, error: fetchErr } = await supabase
         .from('rides')
         .select(`
@@ -89,6 +90,7 @@ export default function FindRide() {
         `)
         .eq('status', 'active')
         .gte('available_seats', seatsNeeded)
+        .gte('departure_time', thirtyMinAgo)
         .neq('driver_id', session.user.id); // Don't show own rides
 
       if (fetchErr) throw fetchErr;

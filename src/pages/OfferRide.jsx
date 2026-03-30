@@ -10,9 +10,9 @@ import { useGoogleMaps } from '../contexts/GoogleMapsProvider';
 // ─── Pricing Config ───────────────────────────────────────
 // These match the master architecture's Distance-Only Flat Rate
 const PRICING = {
-  bike: { base: 50, perKm: 70, seats: 1 },
-  tuk:  { base: 50, perKm: 80, seats: 3 },
-  car:  { base: 80, perKm: 100, seats: 4 },
+  bike: { base: 40, perKm: 40, seats: 1 },
+  tuk:  { base: 50, perKm: 50, seats: 3 },
+  car:  { base: 70, perKm: 60, seats: 4 },
 };
 
 export default function OfferRide() {

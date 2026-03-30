@@ -6,6 +6,8 @@ import {
   requestNotificationPermission,
   showBrowserNotification,
   registerServiceWorker,
+  subscribeToPush,
+  unsubscribeFromPush,
 } from '../utils/notifications';
 
 const NotificationContext = createContext({});
@@ -21,23 +23,40 @@ export function NotificationProvider({ children }) {
   // Active ride IDs for the driver
   const [activeRideIds, setActiveRideIds] = useState([]);
 
-  // ─── Initialize: Service Worker + Notification Permission ──
+  // ─── Initialize: Service Worker + Push Subscription ────────
   useEffect(() => {
     // Register service worker
     registerServiceWorker();
 
-    // Check and request notification permission
+    // Check notification permission
     if ('Notification' in window) {
       setNotifPermission(Notification.permission);
     }
   }, []);
 
+  // ─── Auto-subscribe to Web Push when logged in + permission granted ──
+  useEffect(() => {
+    if (!session?.user) return;
+
+    // Only subscribe if permission is already granted
+    if ('Notification' in window && Notification.permission === 'granted') {
+      subscribeToPush(session.user.id);
+    }
+  }, [session?.user?.id]);
+
   // Request permission (call from a user interaction)
+  // After permission is granted, immediately subscribes to Web Push
   const requestPermission = useCallback(async () => {
     const perm = await requestNotificationPermission();
     setNotifPermission(perm);
+
+    // If user just granted permission, subscribe to push right away
+    if (perm === 'granted' && session?.user) {
+      subscribeToPush(session.user.id);
+    }
+
     return perm;
-  }, []);
+  }, [session?.user?.id]);
 
   // ─── Notify: Sound + Browser Notification + In-App Popup ───
   const notifyDriver = useCallback((notification) => {

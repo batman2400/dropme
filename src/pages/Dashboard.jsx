@@ -22,6 +22,7 @@ export default function Dashboard() {
   useEffect(() => {
     const fetchRides = async () => {
       try {
+        const thirtyMinAgo = new Date(Date.now() - 30 * 60 * 1000).toISOString();
         const { data, error } = await supabase
           .from('rides')
           .select(`
@@ -41,6 +42,7 @@ export default function Dashboard() {
           `)
           .eq('status', 'active')
           .gte('available_seats', 1)
+          .gte('departure_time', thirtyMinAgo)
           .order('departure_time', { ascending: true })
           .limit(5);
 

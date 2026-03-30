@@ -126,13 +126,32 @@ export default function DriverActiveRide() {
           filter: `ride_id=eq.${rideId}`,
         },
         (payload) => {
-          setRequests(prev =>
-            prev.map(r =>
-              r.id === payload.new.id
-                ? { ...r, status: payload.new.status }
-                : r
-            )
-          );
+          const newStatus = payload.new.status;
+
+          if (newStatus === 'cancelled' || newStatus === 'rejected') {
+            // Check if this was an accepted request (passenger cancelled after acceptance)
+            setRequests(prev => {
+              const oldRequest = prev.find(r => r.id === payload.new.id);
+              // If the cancelled request was previously accepted, restore seats
+              if (oldRequest && oldRequest.status === 'accepted') {
+                setRide(prevRide => prevRide ? ({
+                  ...prevRide,
+                  available_seats: prevRide.available_seats + oldRequest.seats_requested,
+                }) : prevRide);
+              }
+              // Remove from the list
+              return prev.filter(r => r.id !== payload.new.id);
+            });
+          } else {
+            // Update status in place (e.g., pending -> accepted)
+            setRequests(prev =>
+              prev.map(r =>
+                r.id === payload.new.id
+                  ? { ...r, status: newStatus }
+                  : r
+              )
+            );
+          }
         }
       )
       .subscribe();

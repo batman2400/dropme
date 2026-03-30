@@ -39,6 +39,49 @@ export default function Activity() {
     };
 
     fetchActivity();
+
+    // ─── Realtime: Listen for ride request status changes ─────
+    const requestsChannel = supabase
+      .channel('activity-requests')
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'ride_requests',
+          filter: `passenger_id=eq.${profile.id}`,
+        },
+        (payload) => {
+          setPassengerRequests(prev =>
+            prev.map(r => r.id === payload.new.id ? { ...r, ...payload.new } : r)
+          );
+        }
+      )
+      .subscribe();
+
+    // ─── Realtime: Listen for ride status changes ─────────────
+    const ridesChannel = supabase
+      .channel('activity-rides')
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'rides',
+          filter: `driver_id=eq.${profile.id}`,
+        },
+        (payload) => {
+          setDriverRides(prev =>
+            prev.map(r => r.id === payload.new.id ? { ...r, ...payload.new } : r)
+          );
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(requestsChannel);
+      supabase.removeChannel(ridesChannel);
+    };
   }, [profile]);
 
   const handleCancelRide = async (rideId) => {
