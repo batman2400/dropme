@@ -25,8 +25,14 @@ export default function ProtectedRoute({ children }) {
     return <Navigate to="/" replace />;
   }
 
-  // Logged in but no profile yet, and trying to go somewhere other than /welcome
-  // → force them to complete onboarding
+  // Profile exists but no phone number → incomplete onboarding
+  // Only redirect if we're NOT already on /welcome
+  if (profile && !profile.phone_number && location.pathname !== '/welcome') {
+    return <Navigate to="/welcome" replace />;
+  }
+
+  // No profile at all (brand new user, trigger hasn't fired yet)
+  // → send to /welcome to set up their profile
   if (!profile && location.pathname !== '/welcome') {
     return <Navigate to="/welcome" replace />;
   }

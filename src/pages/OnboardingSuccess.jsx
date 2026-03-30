@@ -34,25 +34,32 @@ export default function OnboardingSuccess() {
     setPhoneError('');
     setLoading(true);
 
-    if (user) {
-      const { error } = await supabase
-        .from('profiles')
-        .upsert({
-          id: user.id,
-          phone_number: phone.trim(),
-          full_name: user?.user_metadata?.full_name || user?.user_metadata?.name || user?.email?.split('@')[0] || 'Unknown User',
-          avatar_url: user?.user_metadata?.avatar_url || null,
-          vehicle_type: user?.user_metadata?.vehicle_type || null,
-          vehicle_plate: user?.user_metadata?.vehicle_plate || null
-        }, { onConflict: 'id' });
+    try {
+      if (user) {
+        const { error } = await supabase
+          .from('profiles')
+          .upsert({
+            id: user.id,
+            phone_number: phone.trim(),
+            full_name: user?.user_metadata?.full_name || user?.user_metadata?.name || user?.email?.split('@')[0] || 'Unknown User',
+            avatar_url: user?.user_metadata?.avatar_url || null,
+            vehicle_type: user?.user_metadata?.vehicle_type || null,
+            vehicle_plate: user?.user_metadata?.vehicle_plate || null
+          }, { onConflict: 'id' });
 
-      if (error) {
-        console.error('Profile creation error:', error.message);
-      } else {
+        if (error) {
+          console.error('Profile creation error:', error.message);
+        }
+
+        // IMPORTANT: Wait for profile to be loaded into context before navigating
+        // Otherwise ProtectedRoute sees profile as null and redirects back here
         await refreshProfile();
       }
+    } catch (err) {
+      console.error('Onboarding error:', err);
     }
 
+    // Navigate even if there was an error — don't trap the user
     navigate('/dashboard');
   };
 
