@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1a3fc7"/>
+      <stop offset="100%" stop-color="#3b5ee8"/>
+    </linearGradient>
+  </defs>
+  <!-- Rounded square background -->
+  <rect width="512" height="512" rx="108" ry="108" fill="url(#bg)"/>
+  <!-- "d" letterform -->
+  <text x="256" y="380" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-weight="800" font-size="360" fill="white">d</text>
+  <!-- Dot accent -->
+  <circle cx="410" cy="400" r="28" fill="#b4c5ff"/>
+</svg>
